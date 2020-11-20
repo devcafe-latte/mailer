@@ -21,7 +21,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm install
-    - run: npm testNoThirdParties
+    - run: npm run testNoThirdParties
       env:
         CI: true
         SEED_DB: "1"
