@@ -5,8 +5,7 @@ metadata:
   namespace: test
 spec:
   selector:
-    app: nqloans
-    role: mailer
+    app: mailer
     stage: test
   ports:
     - name: http
@@ -23,18 +22,16 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nqloans
-      role: mailer
+      app: mailer
       stage: test
   template:
     metadata:
       labels:
-        app: nqloans
-        role: mailer
+        app: mailer
         stage: test
     spec:
       containers:
-      - image: registry.digitalocean.com/berlin-reg/covle-mailer:$COMMIT_SHA1
+      - image: crispyduck/covle-mailer:latest
         name: mailer
         env:
         - name: PORT
@@ -44,7 +41,7 @@ spec:
         - name: DB_PORT
           value: "25060"
         - name: DB_NAME
-          value: test-mailer
+          value: mailer
         - name: MAIL_TRANSPORT
           value: "mock"
         - name: DB_USER
@@ -73,7 +70,7 @@ spec:
       template:
         spec:    
           containers:
-          - image: registry.digitalocean.com/berlin-reg/covle-mailer:$COMMIT_SHA1
+          - image: crispyduck/covle-mailer:latest
             name: mailer-cron
             command: ["node",  "/app/build/cron.js"]
             env:
@@ -95,5 +92,5 @@ spec:
                   name: db-password
                   key: mailer
           imagePullSecrets:
-          - name: regcred2
+          - name: regcred
           restartPolicy: OnFailure
