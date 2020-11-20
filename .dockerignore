@@ -1,0 +1,8 @@
+/.nyc_output
+/.vscode
+/build
+/coverage
+/.env
+/node_modules
+**/.git/
+/uploads
