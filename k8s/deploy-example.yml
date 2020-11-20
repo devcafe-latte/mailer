@@ -1,0 +1,99 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mailer
+  namespace: test
+spec:
+  selector:
+    app: nqloans
+    role: mailer
+    stage: test
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailer
+  namespace: test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nqloans
+      role: mailer
+      stage: test
+  template:
+    metadata:
+      labels:
+        app: nqloans
+        role: mailer
+        stage: test
+    spec:
+      containers:
+      - image: registry.digitalocean.com/berlin-reg/covle-mailer:$COMMIT_SHA1
+        name: mailer
+        env:
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          value: db-cluster
+        - name: DB_PORT
+          value: "25060"
+        - name: DB_NAME
+          value: test-mailer
+        - name: MAIL_TRANSPORT
+          value: "mock"
+        - name: DB_USER
+          value: test-mailer
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: db-password
+              key: mailer
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+      imagePullSecrets:
+      - name: regcred2
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: mailer-cron
+  namespace: test
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:    
+          containers:
+          - image: registry.digitalocean.com/berlin-reg/covle-mailer:$COMMIT_SHA1
+            name: mailer-cron
+            command: ["node",  "/app/build/cron.js"]
+            env:
+            - name: PORT
+              value: "3000"
+            - name: DB_HOST
+              value: db-cluster
+            - name: DB_PORT
+              value: "25060"
+            - name: DB_NAME
+              value: test-mailer
+            - name: MAIL_TRANSPORT
+              value: "mock"
+            - name: DB_USER
+              value: test-mailer
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: db-password
+                  key: mailer
+          imagePullSecrets:
+          - name: regcred2
+          restartPolicy: OnFailure

@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mail-$ENV-$COMMIT_SHA1
+  namespace: test
+spec:
+  ttlSecondsAfterFinished: 300 # 5 minutes
+  template:
+    spec:    
+      containers:
+      - image: registry.digitalocean.com/berlin-reg/covle-mailer:$COMMIT_SHA1
+        name: mailer-$ENV-migration
+        command: ["node", "node_modules/db-migrate/bin/db-migrate", "up", "-e", "db"]
+        env:
+        - name: DB_HOST
+          value: db-cluster
+        - name: DB_PORT
+          value: "25060"
+        - name: DB_NAME
+          value: test-mailer
+        - name: DB_USER
+          value: test-mailer
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: db-password
+              key: mailer
+      imagePullSecrets:
+      - name: regcred2
+      restartPolicy: Never

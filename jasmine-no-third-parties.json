@@ -1,0 +1,9 @@
+{
+  "spec_dir": "src",
+  "spec_files": [
+    "**/*.spec.ts",
+    "!tests/Mailgun.spec.ts",
+    "!tests/sendinblue.spec.ts"
+  ],
+  "stopSpecOnExpectationFailure": true
+}
