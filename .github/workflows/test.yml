@@ -1,6 +1,9 @@
 name: Test And Build
 
-on: [push]
+on: 
+  push:
+    tags:
+    - v1.*
 
 jobs:
   test:
@@ -42,13 +45,21 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_PASS }}
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Test release version
+        run: |
+          echo $RELEASE_VERSION
+          echo ${{ env.RELEASE_VERSION }}
       -
         name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: crispyduck/mailer:latest
+          tags: |
+            crispyduck/mailer:latest
+            crispyduck/mailer:${{ env.RELEASE_VERSION }}
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
