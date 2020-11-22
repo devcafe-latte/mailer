@@ -36,6 +36,7 @@ export class MailManager {
 
   private async addTemplate(mc: EmailContent) {
     if (!mc.template) return;
+    if (!mc.language) mc.language = container.settings.defaults.language;
 
     const t = await container.db.getRow<MailTemplate>("SELECT * FROM `template` WHERE name = ? AND language = ?", [mc.template, mc.language]);
     if (!t) throw MailerError.new(`Template not found: ${mc.template} lang: ${mc.language}`, 400)
