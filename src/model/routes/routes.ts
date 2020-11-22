@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
   res.send(response);
 });
 
-router.post('/email', requiredBody('from', 'to', 'subject', 'text'), async (req, res, next) => {
+router.post('/email', requiredBody('to', 'subject', 'text'), async (req, res, next) => {
   try {
     console.log("Sending email: " + req.body.subject);
     const result = await container.mailer.sendMail(req.body);
@@ -58,7 +58,7 @@ router.post('/email', requiredBody('from', 'to', 'subject', 'text'), async (req,
   
 });
 
-router.post('/email-from-template', requiredBody('from', 'to', 'template', 'language'), async (req, res, next) => {
+router.post('/email-from-template', requiredBody('to', 'template'), async (req, res, next) => {
   try {
     console.log("Sending email from Template: " + req.body.template);
     const result = await container.mailer.sendMailFromTemplate(req.body);
