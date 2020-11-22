@@ -7,6 +7,7 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 SET NAMES utf8mb4;
 
+DROP TABLE IF EXISTS `email`;
 CREATE TABLE `email` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `from` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -22,9 +23,12 @@ CREATE TABLE `email` (
   `sent` int(11) DEFAULT NULL,
   `created` int(11) NOT NULL,
   `retryAfter` int(11) DEFAULT NULL,
+  `template` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `language` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+DROP TABLE IF EXISTS `migrations`;
 CREATE TABLE `migrations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -32,6 +36,10 @@ CREATE TABLE `migrations` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+INSERT INTO `migrations` (`id`, `name`, `run_on`) VALUES
+(1,	'/20201122015904-template',	'2020-11-22 09:30:36');
+
+DROP TABLE IF EXISTS `template`;
 CREATE TABLE `template` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
@@ -42,4 +50,5 @@ CREATE TABLE `template` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 2020-11-20 06:52:24
+
+-- 2020-11-22 02:59:04
