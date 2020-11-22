@@ -26,7 +26,6 @@ export class Database {
 
     //Try to create the db?
     if (!connected && process.env.SEED_DB) {
-      console.log("Seeding Database");
       await this.trySeed();
       connected = await this.createPool();
     }
@@ -63,10 +62,10 @@ export class Database {
       return true;
     } catch (err) {
       if (err.code === "ECONNREFUSED") {
-        if (attempt > 4) return false;
+        if (attempt > 15) return false;
 
-        console.log("Waiting for DB server to come oneline... Attempt " + attempt);
-        await timeout(500);
+        console.log("Waiting for DB server to come online... Attempt " + attempt);
+        await timeout(1500);
         return this.createPool(++attempt);
       }
 
