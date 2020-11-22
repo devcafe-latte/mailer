@@ -32,9 +32,6 @@ CREATE TABLE `email` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `email` (`id`, `from`, `to`, `replyTo`, `subject`, `text`, `html`, `maxRetries`, `attempt`, `status`, `error`, `sent`, `created`, `retryAfter`, `template`, `language`) VALUES
-(1,	'Ya Boi Testy McTestFace <noreply@cerem.co>',	'Coo van Leeuwen <c00yt825@gmail.com>',	NULL,	'I live in a giant {{ foo }}.',	'Text {{ foo }}.\r\nText {{ bar }}.\r\nText {{ baz }}.',	'<p>\r\nhtml {{ foo }}.\r\nhtml {{ bar }}.\r\nhtml {{ baz }}.\r\n</p>',	10,	0,	'sent',	NULL,	1606012238,	1606012236,	NULL,	'test-template-1',	'en');
-
 DROP TABLE IF EXISTS `migrations`;
 CREATE TABLE `migrations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
