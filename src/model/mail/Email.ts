@@ -20,11 +20,12 @@ export interface EmailContent {
 }
 
 export interface MailTemplate {
-  id: number;
-  language: string;
+  id?: number;
+  name: string;
+  language?: string;
   subject: string;
   text: string;
-  html: string;
+  html?: string;
 }
 
 export interface Address {

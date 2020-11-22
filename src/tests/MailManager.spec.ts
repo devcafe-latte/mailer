@@ -1,6 +1,6 @@
 import { DataGenerator } from '../model/DataGenerator';
 import container from '../model/DiContainer';
-import { Email, EmailContent, MailStatus } from '../model/mail/Email';
+import { Email, EmailContent, MailStatus, MailTemplate } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
@@ -164,7 +164,7 @@ describe('Queueing and Processing', () => {
   });
 
   it('Queue new mail with replyTo', async (done) => {
-    const content: EmailContent = {...mailContent, replyTo: { name: "karel", address: "karel@example.com"} };
+    const content: EmailContent = { ...mailContent, replyTo: { name: "karel", address: "karel@example.com" } };
 
     const m = await mm.queueMail(content);
     expect(m.id).toBe(1);
@@ -191,7 +191,7 @@ describe('Queueing and Processing', () => {
   });
 
   it('Processes an mail with replyTo', async (done) => {
-    const content: EmailContent = {...mailContent, replyTo: { name: "karel", address: "karel@example.com"} };
+    const content: EmailContent = { ...mailContent, replyTo: { name: "karel", address: "karel@example.com" } };
 
     const m = await mm.queueMail(content);
 
@@ -275,7 +275,7 @@ describe('Getting emails', () => {
 
     expect(emailPage.emails[0].constructor.name).toBe("Email");
     expect(emailPage.emails[0].created.constructor.name).toBe("Moment");
-    
+
     done();
   });
 
@@ -295,7 +295,7 @@ describe('Getting emails', () => {
 
     expect(firstPage.emails[0].id).toBe(100);
     expect(firstPage.emails[24].id).toBe(76);
-    
+
 
     const secondPage = await mm.getEmails(1);
     expect(secondPage.currentPage).toBe(1);
@@ -305,7 +305,7 @@ describe('Getting emails', () => {
 
     expect(secondPage.emails[0].id).toBe(75);
     expect(secondPage.emails[24].id).toBe(51);
-    
+
     done();
   });
 
@@ -325,7 +325,109 @@ describe('Getting emails', () => {
 
     expect(page.emails[0].id).toBe(80);
     expect(page.emails[9].id).toBe(71);
-    
+
+    done();
+  });
+
+});
+
+
+describe('Templates', () => {
+
+  let th: TestHelper;
+  let mm: MailManager;
+  let template: MailTemplate;
+
+  beforeEach(async (done) => {
+    th = await TestHelper.new();
+    mm = container.mailer;
+
+    template = {
+      name: 'test-template',
+      language: 'en',
+      subject: "a test template",
+      text: "Testies, testies",
+      html: "HTML go brrrr"
+    };
+
+    done();
+  });
+
+  afterEach(async (done) => {
+    console.log("Shutting down");
+    await th.shutdown();
+    done();
+  });
+
+  it("adds templates", async (done) => {
+    //Save new template
+    await mm.saveTemplate(template);
+    expect(template.id).toBe(4);
+
+    template.language = 'de';
+    await mm.saveTemplate(template);
+    expect(template.id).toBe(5);
+
+    template.language = 'nl';
+    template.name = 'another-template'
+    await mm.saveTemplate(template);
+    expect(template.id).toBe(6);
+
+    try {
+      await mm.saveTemplate(template);
+      expect(true).toBe(false, "Should not get here");
+    } catch (err) {
+      expect(err.message).toContain("already-exists");
+    }
+
+    const ts = await mm.getTemplates();
+    expect(ts.length).toBe(6);
+    done();
+  });
+
+  it("update templates", async (done) => {
+    const t: Partial<MailTemplate> = {
+      name: 'test-template-1',
+      language: 'en',
+      subject: 'knokko',
+    }
+
+    const saved = await mm.updateTemplate(t);
+    expect(saved.id).toBe(1);
+    expect(saved.subject).toBe('knokko');
+    expect(saved.text).toContain('Text {{ foo }}');
+
+    //non existing one
+    t.language = 'ie';
+    try {
+      await mm.updateTemplate(t);
+      expect(true).toBe(false, "Shouldn't get here.");
+    } catch (err) {
+      expect(err.message).toContain("not-found");
+    }
+
+    done();
+  });
+
+  it("delete templates", async (done) => {
+    const t: Partial<MailTemplate> = {
+      name: 'test-template-1',
+      language: 'en',
+    }
+    const before = (await mm.getTemplates()).length;
+
+    await mm.removeTemplate(t.name, t.language);
+
+    try {
+      await mm.removeTemplate(t.name, t.language);
+      expect(true).toBe(false, "Shouldn't get here.");
+    } catch (err) {
+      expect(err.message).toContain("not-found");
+    }
+
+    const after = (await mm.getTemplates()).length;
+    expect(before).toBe(after + 1);
+
     done();
   });
 

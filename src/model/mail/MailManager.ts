@@ -17,6 +17,52 @@ export class MailManager {
 
   constructor() { }
 
+  async getTemplates(): Promise<MailTemplate[]> {
+    const sql = "SELECT * FROM `template`";
+    return await container.db.getRows<MailTemplate>(sql, []);
+  }
+
+  async saveTemplate(t: MailTemplate): Promise<MailTemplate> {
+    t.id = null;
+    if (!t.language) t.language = container.settings.defaults.language;
+    const existing = await this.getTemplate(t.name, t.language);
+    if (existing) throw MailerError.new('template-already-exists', 400);
+
+    await container.db.insert('template', t);
+    return t;
+  }
+
+  async updateTemplate(t: Partial<MailTemplate>): Promise<MailTemplate> {
+    if (!t.name) throw MailerError.new("Missing template name");
+
+    if (!t.language) t.language = container.settings.defaults.language;
+    const existing = await this.getTemplate(t.name, t.language);
+    if (!existing) throw MailerError.new('template-not-found', 404);
+
+    t.id = existing.id;
+    await container.db.update({ object: t, table: 'template', column: 'id' });
+
+    Object.assign(existing, t);
+
+    return existing;
+  }
+
+  async removeTemplate(name: string, language?: string) {
+    if (!language) language = container.settings.defaults.language;
+    const existing = await this.getTemplate(name, language);
+    if (!existing) throw MailerError.new('template-not-found', 404);
+
+    await container.db.delete('template', existing.id);
+
+  }
+
+  private async getTemplate(name: string, lang?: string) {
+    if (!lang) lang = container.settings.defaults.language;
+
+    const sql = "SELECT * FROM `template` WHERE name = ? AND language = ?";
+    return await container.db.getRow<MailTemplate>(sql, [name, lang]);
+  }
+
   async getEmails(currentPage = 0, perPage = 25): Promise<EmailPage> {
 
     const sql = [

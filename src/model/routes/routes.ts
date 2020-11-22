@@ -95,6 +95,48 @@ router.get('/emails', async (req, res, next) => {
   }
 });
 
+/* region Templates */
+router.get('/templates', async (req, res, next) => {
+  try {
+    const result = await container.mailer.getTemplates();
+    cleanForSending(result);
+    res.send({ status: 'ok', templates: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/templates', requiredBody('name', 'text', 'subject'), async (req, res, next) => {
+  try {
+    const template = await container.mailer.saveTemplate(req.body);
+    cleanForSending(template);
+    res.send({ status: 'ok', template });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/templates', requiredBody('name'), async (req, res, next) => {
+  try {
+    const template = await container.mailer.updateTemplate(req.body);
+    cleanForSending(template);
+    res.send({ status: 'ok', template });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/templates/:name/:language', async (req, res, next) => {
+  try {
+    const template = await container.mailer.removeTemplate(req.params.name, req.params.language);
+    cleanForSending(template);
+    res.send({ status: 'ok', template });
+  } catch (err) {
+    next(err);
+  }
+});
+/* End region */
+
 //404 Handler
 router.use((req, res) => {
   res.status(404);

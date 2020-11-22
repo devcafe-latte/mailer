@@ -8,7 +8,7 @@ import { DataGenerator } from '../model/DataGenerator';
 
 TestHelper.setTestEnv();
 
-describe("Mailer - Public Api", () => {
+describe("Mailer - Basics Api", () => {
   let th: TestHelper;
 
   beforeEach(async (done) => {
@@ -189,3 +189,75 @@ describe("Mailer - Public Api", () => {
   });
 });
 
+describe("Mailer - Templates API", () => {
+  let th: TestHelper;
+
+  beforeEach(async (done) => {
+    th = await TestHelper.new();
+
+    done();
+  });
+
+  afterEach(async (done) => {
+    await th.shutdown();
+
+    done();
+  });
+
+  it("API get templates", async (done) => {
+    const result = await request(mailer.app).get("/templates")
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.templates.length).toBe(3);
+
+    done();
+  });
+
+  it("API post templates", async (done) => {
+    const data = {
+      name: 'posted-1',
+      language: 'en',
+      subject: 'posting yo',
+      text: 'such fun.\nright?'
+    };
+    const result = await request(mailer.app).post("/templates")
+      .send(data)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.template).toBeDefined();
+
+    done();
+  });
+
+  it("API put templates", async (done) => {
+    const data = {
+      name: 'test-template-1',
+      language: 'en',
+      text: 'some new text is needed.'
+    };
+    const result = await request(mailer.app).put("/templates")
+      .send(data)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.template.text).toContain("new text is");
+
+    done();
+  });
+
+  it("API DELETE templates", async (done) => {
+    const data = {
+      name: 'test-template-1',
+      language: 'en',
+    };
+    const result = await request(mailer.app).delete(`/templates/${data.name}/${data.language}`)
+      .send(data)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+
+    done();
+  });
+});

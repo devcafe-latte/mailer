@@ -11,4 +11,8 @@ export class MailerError {
 
     return e;
   }
+
+  toString() {
+    return `[${this.status}] ${this.message}`;
+  }
 }
