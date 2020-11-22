@@ -1,5 +1,10 @@
 import { EmailContent, Email } from '../model/mail/Email';
+import { DefaultMailSettings } from '../model/Settings';
 describe('Email Tests', () => {
+  const defaults: DefaultMailSettings = {
+    from: { address: 'noreply@example.com' },
+    language: 'en',
+  };
   const validContent1: EmailContent = {
     to: "Co van Leeuwen <coo@covle.com>",
     from: { name: "Peter", address: "blup@bluppie.com" },
@@ -15,15 +20,15 @@ describe('Email Tests', () => {
     html: "<strong>well yes</strong>. But also <i>no</i>."
   };
 
-  it ("tests fromContent", () => {
-    const m = Email.fromMailContent(validContent1);
+  it("tests fromContent", () => {
+    const m = Email.fromMailContent(validContent1, defaults);
     expect(m.isValid()).toBe(true);
 
-    const m2 = Email.fromMailContent(validContent2);
+    const m2 = Email.fromMailContent(validContent2, defaults);
     expect(m2.isValid()).toBe(true);
   });
 
-  it ("tests validity", () => {
+  it("tests validity", () => {
     const m = new Email();
     let errors = [];
     expect(m.isValid(errors)).toBe(false);
@@ -35,8 +40,8 @@ describe('Email Tests', () => {
     expect(errors.length).toBe(7);
   });
 
-  it ("tests valid address strings", () => {
-    const m = Email.fromMailContent(validContent1);
+  it("tests valid address strings", () => {
+    const m = Email.fromMailContent(validContent1, defaults);
     expect(m.isValid()).toBe(true);
 
     m.from = "Not an email address";

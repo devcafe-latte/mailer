@@ -1,19 +1,21 @@
 import moment, { Moment } from 'moment';
 
-import { toObject, isValidEmail } from '../helpers';
+import { isValidEmail, toObject } from '../helpers';
+import { DefaultMailSettings } from '../Settings';
+
+import _ from 'lodash';
 
 export interface EmailContent {
-  from: string | Address;
+  from?: string | Address;
   to: string | Address;
   replyTo?: string | Address;
   subject: string;
   text: string;
   html?: string;
-}
 
-export interface EmailTemplateContent extends EmailContent {
-  language: string;
-  template: string;
+  //For template
+  language?: string;
+  template?: string;
   params?: any;
 }
 
@@ -53,7 +55,8 @@ export class Email implements EmailContent {
   sent?: Moment = null;
   created: Moment = null;
   retryAfter?: Moment = null;
-
+  template?: string = null;
+  language?: string = null;
 
   isValid(errors = []): boolean {
     if (!this.isValidAddress(this.from)) errors.push("'from' is not a valid address string");
@@ -67,6 +70,13 @@ export class Email implements EmailContent {
     if (!this.created) errors.push("'created' missing")
 
     return errors.length === 0;
+  }
+
+  toNodeMailerMail() {
+    const clone = _.clone(this);
+    delete clone.template;
+    delete clone.language;
+    return clone;
   }
 
   private isValidAddress(address: string): boolean {
@@ -89,8 +99,11 @@ export class Email implements EmailContent {
     return isValidEmail(email);
   }
 
-  static fromMailContent(mc: EmailContent) {
+  static fromMailContent(mc: EmailContent, defaults: DefaultMailSettings) {
     const m = new Email();
+    if (!mc.from) mc.from = defaults.from;
+    if (mc.template && !mc.language) mc.language =  defaults.language;
+
     Object.assign(m, mc);
     if (typeof mc.from === "object") m.from = Email.addressToString(mc.from);
     if (typeof mc.to === "object") m.to = Email.addressToString(mc.to);
@@ -99,13 +112,9 @@ export class Email implements EmailContent {
     m.status = MailStatus.PENDING;
     m.maxRetries = 10;
     m.attempt = 0;
-    //Not to confuse mailgun
-    delete m['template'];
-    delete m['language'];
 
     return m;
   }
-
 
   static addressToString(a: Address): string {
     if (!a.name) return a.address;

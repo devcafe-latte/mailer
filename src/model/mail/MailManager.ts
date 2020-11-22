@@ -6,7 +6,7 @@ import sendinBlue from 'nodemailer-sendinblue-transport';
 
 import container from '../DiContainer';
 import { MailerError } from '../MailerError';
-import { Email, EmailContent, MailStatus, MailTemplate, EmailTemplateContent } from './Email';
+import { Email, EmailContent, MailStatus, MailTemplate } from './Email';
 import { MockTransport } from '../MockTransport';
 
 
@@ -34,7 +34,7 @@ export class MailManager {
     return { emails, perPage, currentPage, lastPage };
   }
 
-  private async addTemplate(mc: EmailTemplateContent) {
+  private async addTemplate(mc: EmailContent) {
     if (!mc.template) return;
 
     const t = await container.db.getRow<MailTemplate>("SELECT * FROM `template` WHERE name = ? AND language = ?", [mc.template, mc.language]);
@@ -46,7 +46,7 @@ export class MailManager {
     this.interpolate(mc);
   }
 
-  private interpolate(m: EmailTemplateContent) {
+  private interpolate(m: EmailContent) {
     if (!m.params) return;
 
     for (let key of Object.getOwnPropertyNames(m.params)) {
@@ -59,7 +59,7 @@ export class MailManager {
 
   }
 
-  async sendMailFromTemplate(mc: EmailTemplateContent, sendImmediately = true): Promise<any> {
+  async sendMailFromTemplate(mc: EmailContent, sendImmediately = true): Promise<any> {
     await this.addTemplate(mc);
     if (sendImmediately) {
       return this.sendMail(mc);
@@ -69,7 +69,7 @@ export class MailManager {
   }
 
   async sendMail(mailContent: EmailContent): Promise<any> {
-    const mail = Email.fromMailContent(mailContent);
+    const mail = Email.fromMailContent(mailContent, container.settings.defaults);
     const errors = [];
     if (!mail.isValid(errors)) throw MailerError.new("Mail content invalid. \n" + errors.join("\n"), 400);
 
@@ -79,7 +79,7 @@ export class MailManager {
   }
 
   async queueMail(mailContent: EmailContent): Promise<Email> {
-    const mail = Email.fromMailContent(mailContent);
+    const mail = Email.fromMailContent(mailContent, container.settings.defaults);
     mail.retryAfter = moment().subtract(1, 'second');
 
     const errors = [];
@@ -114,10 +114,8 @@ export class MailManager {
 
   private async trySend(mail: Email) {
     try {
-      const result = await this.getMailer().sendMail(mail);
+      const result = await this.getMailer().sendMail(mail.toNodeMailerMail());
       result.success = true;
-
-      //todo Check if it's actually sent.
 
       mail.sent = moment();
       mail.status = MailStatus.SENT;
@@ -178,7 +176,7 @@ export class MailManager {
             api_key: container.settings.mailgunApiKey,
             domain: container.settings.mailgunDomain,
           },
-          host: 'api.eu.mailgun.net',
+          host: container.settings.mailgunHost,
         }
         this._mailer = nodemailer.createTransport(mg(options));
       } else {

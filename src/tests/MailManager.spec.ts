@@ -1,6 +1,6 @@
 import { DataGenerator } from '../model/DataGenerator';
 import container from '../model/DiContainer';
-import { Email, EmailContent, MailStatus, EmailTemplateContent } from '../model/mail/Email';
+import { Email, EmailContent, MailStatus } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
@@ -71,7 +71,7 @@ describe('Templates', () => {
   let th: TestHelper;
   let mm: MailManager;
 
-  const mailContent: EmailTemplateContent = {
+  const mailContent: EmailContent = {
     to: "Coo van Leeuwen <Coo@covle.com>",
     from: "Jacky D <Jack@covle.com>",
     template: "test-template-1",
