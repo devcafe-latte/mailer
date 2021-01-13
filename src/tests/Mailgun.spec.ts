@@ -2,6 +2,7 @@ import container from '../model/DiContainer';
 import { Email, EmailContent, MailStatus } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { TestHelper } from './TestHelper';
+import { MailTransportType } from '../model/Settings';
 
 describe('Send using Mailgun', () => {
   let th: TestHelper;
@@ -16,7 +17,7 @@ describe('Send using Mailgun', () => {
 
   beforeEach(async (done) => {
     th = await TestHelper.new();
-    container.settings.mailTransport = "mailgun";
+    container.settings.mailTransport = MailTransportType.MAILGUN;
     mm = container.mailer;
 
     done();

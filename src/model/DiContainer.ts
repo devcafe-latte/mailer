@@ -30,10 +30,10 @@ export class Container {
     if (existsSync('.env')) dotenv.config();
 
     this.settings = new Settings();
-    this.mailer = new MailManager();
     this.db = new Database();
-
     await this.db.ready();
+    
+    this.mailer = new MailManager();
   }
 
   async shutdown() {

@@ -1,7 +1,9 @@
 import moment from 'moment';
 
-import { stripComplexTypes, toObject, cleanForSending, hasProperties, isValidEmail, selectType, serializeObject } from '../model/helpers';
+import { stripComplexTypes, toObject, cleanForSending, hasProperties, isValidEmail, selectType, serializeObject, convertSettingsToTransports } from '../model/helpers';
 import uuidv4 from 'uuid/v4';
+import { TestHelper } from './TestHelper';
+import container from '../model/DiContainer';
 
 describe('Helpers', function() {
 
@@ -164,5 +166,25 @@ describe('serializeObject', () => {
 
     const result = serializeObject([input]);
     expect(result).toEqual([expected]);
+  });
+});
+
+describe("Transport Conversion", () => {
+  let th: TestHelper;
+
+  beforeEach(async () => {
+    th = await TestHelper.new();
+  });
+
+  afterEach(async () => {
+    await th.shutdown();
+  });
+
+  it("Convert Settings To Transports", async () => {
+    const preCount = await container.db.getValue("SELECT COUNT(id) FROM transport");
+    await convertSettingsToTransports();
+    const postCount = await container.db.getValue("SELECT COUNT(id) FROM transport");
+
+    expect(preCount).toBeLessThan(postCount);
   });
 });

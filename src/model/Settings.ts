@@ -1,4 +1,6 @@
 import { Address } from './mail/Email';
+import { MailgunSettings, SendInBlueSettings, SmtpSettings } from './Transport';
+
 export class Settings {
   debug: boolean = (process.env.NODE_ENV !== "production");
 
@@ -17,25 +19,34 @@ export class Settings {
     language: process.env.DEFAULT_LANG || 'en',
   };
 
-  mailTransport = process.env.MAIL_TRANSPORT || 'smtp';
+  /* deprecated */
+  mailTransport: MailTransportType;
 
-  smtpServer = process.env.SMTP_SERVER || 'notset';
-  smtpPort = Number(process.env.SMTP_PORT) || 465;
-  smtpUser = process.env.SMTP_USER || 'user';
-  smtpPass = process.env.SMTP_PASS || 'pass';
-  smtpSecure: boolean;
+  /* deprecated */
+  smtp: SmtpSettings = {
+    server: process.env.SMTP_SERVER || 'notset',
+    port: Number(process.env.SMTP_PORT) || 465,
+    user: process.env.SMTP_USER || 'user',
+    pass: process.env.SMTP_PASS || 'pass',
+    secure: true,
+  }
 
-  mailgunApiKey = process.env.MAILGUN_API_KEY || 'notakey';
-  mailgunDomain = process.env.MAILGUN_DOMAIN || 'mg.example.com';
-  mailgunHost = process.env.MAILGUN_HOST || 'api.eu.mailgun.net';
+  /* deprecated */
+  mailgun: MailgunSettings = {
+    apiKey: process.env.MAILGUN_API_KEY || 'notakey',
+    domain: process.env.MAILGUN_DOMAIN || 'mg.example.com',
+    host: process.env.MAILGUN_HOST || 'api.eu.mailgun.net',
+  }
 
-  sendinBlue = {
+  /* deprecated */
+  sendInBlue: SendInBlueSettings = {
     apiKey: process.env.SENDINBLUE_API_KEY || 'notakey',
     apiUrl: process.env.SENDINBLUE_URL || 'https://api.sendinblue.com/v2.0',
   };
 
   constructor() {
-    this.smtpSecure = this.getBoolValue(process.env.SMTP_SECURE);
+    this.smtp.secure = this.getBoolValue(process.env.SMTP_SECURE);
+    this.getTransportType();
   }
 
   private getBoolValue(value: any): boolean {
@@ -45,7 +56,27 @@ export class Settings {
 
     return false;
   }
+
+  private getTransportType() {
+    const def = MailTransportType.SMTP;
+
+    const setting: any = process.env.MAIL_TRANSPORT;
+
+    if (Object.values(MailTransportType).includes(setting)) {
+      this.mailTransport = setting;
+    } else {
+      this.mailTransport = def;
+    }
+  }
 };
+
+export enum MailTransportType {
+  MOCK = "mock",
+  MAILGUN = "mailgun",
+  SENDINBLUE = "sendinblue",
+  SMTP = "smtp",
+  WEIGHTED = "weighted",
+}
 
 export interface DefaultMailSettings {
   from: Address;

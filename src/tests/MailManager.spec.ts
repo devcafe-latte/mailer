@@ -3,6 +3,7 @@ import container from '../model/DiContainer';
 import { Email, EmailContent, MailStatus, MailTemplate } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
+import { MailTransportType } from '../model/Settings';
 import { TestHelper } from './TestHelper';
 
 process.env.MAIL_TRANSPORT = "mock";
@@ -33,8 +34,8 @@ describe('Basic Sending of messages', () => {
   });
 
   it('tries to send an email without settings', async (done) => {
-    container.settings.smtpServer = "notset";
-    container.settings.mailTransport = "smtp";
+    container.settings.smtp.server = "notset";
+    container.settings.mailTransport = MailTransportType.SMTP;
 
     const result = await mm.sendMail(mailContent)
     expect(result).not.toBeNull();

@@ -1,21 +1,49 @@
 import moment from 'moment';
-import nodemailer from 'nodemailer';
-import Mail from 'nodemailer/lib/mailer';
-import mg from 'nodemailer-mailgun-transport';
-import sendinBlue from 'nodemailer-sendinblue-transport';
 
 import container from '../DiContainer';
+import { convertSettingsToTransports } from '../helpers';
 import { MailerError } from '../MailerError';
+import { Transport } from '../Transport';
 import { Email, EmailContent, MailStatus, MailTemplate } from './Email';
-import { MockTransport } from '../MockTransport';
 
 
 export class MailManager {
   static BACKOFF_DELAY_MINUTES = 5;
 
-  private _mailer: Mail;
+  /* 
+    Transports are weighted, this allows us to send e.g. 30% of emails with transport 1, and 70% to transport 2.
+    If no weights are set (or set to 0), we will fallback on the (last) one marked as default. 
+    If none are marked as default, the first transport in the database will be used.
+   */
+  private _transports: { [key: number]: Transport } = {};
+  private _weights = [];
+  private _defaultTransport: Transport;
 
-  constructor() { }
+  constructor() {
+    this.reloadTransports();
+  }
+
+  async reloadTransports() {
+    const transports = await container.db.getRows<Transport>("SELECT * FROM transport WHERE active = 1");
+    //Convert from legacy settings
+    if (transports.length === 0) return this.convert();
+
+    this._transports = {};
+    this._weights = [];
+    for (let t of transports) {
+      this._transports[t.id] = t;
+      if (t.weight) this._weights.push(...Array(t.weight).fill(t.id));
+      if (t.default) this._defaultTransport = t;
+    }
+
+    //If no default is set, just use the first one.
+    if (!this._defaultTransport) this._defaultTransport = transports[0];
+  }
+
+  private async convert() {
+    await convertSettingsToTransports();
+    return this.reloadTransports();
+  }
 
   async getTemplates(): Promise<MailTemplate[]> {
     const sql = "SELECT * FROM `template`";
@@ -161,7 +189,18 @@ export class MailManager {
 
   private async trySend(mail: Email) {
     try {
-      const result = await this.getMailer().sendMail(mail.toNodeMailerMail());
+      //If no transport, or it's a disabled one, set transport to something valid.
+      if (!mail.transportId || !this._transports[mail.transportId]) {
+        if (this._weights.length === 0) {
+          mail.transportId = this._defaultTransport.id;
+        } else {
+          //We select a 'random' one based on the weights.
+          const n = Math.floor(Math.random() * this._weights.length);
+          mail.transportId = this._weights[n];
+        }
+      }
+
+      const result = await this._transports[mail.transportId].getMailer().sendMail(mail.toNodeMailerMail());
       result.success = true;
 
       mail.sent = moment();
@@ -195,51 +234,11 @@ export class MailManager {
       return { success: false, error: err };
     }
   }
-
-  private getMailer() {
-    if (!this._mailer && container.settings.mailTransport === "smtp" && container.settings.smtpServer === 'notset') {
-      throw "SMTP server not set.";
-    }
-
-    if (!this._mailer) {
-
-      if (container.settings.mailTransport === "smtp") {
-        this._mailer = nodemailer.createTransport({
-          host: container.settings.smtpServer,
-          port: container.settings.smtpPort,
-          auth: {
-            user: container.settings.smtpUser,
-            pass: container.settings.smtpPass
-          },
-          secure: container.settings.smtpSecure
-        });
-      } else if (container.settings.mailTransport === "mock") {
-        this._mailer = nodemailer.createTransport(new MockTransport());
-      } else if (container.settings.mailTransport === "sendinblue") {
-        this._mailer = nodemailer.createTransport(sendinBlue(container.settings.sendinBlue));
-      } else if (container.settings.mailTransport === "mailgun") {
-        const options = {
-          auth: {
-            api_key: container.settings.mailgunApiKey,
-            domain: container.settings.mailgunDomain,
-          },
-          host: container.settings.mailgunHost,
-        }
-        this._mailer = nodemailer.createTransport(mg(options));
-      } else {
-        throw "Unknown Transport: " + container.settings.mailTransport;
-      }
-
-    }
-
-    return this._mailer;
-  }
 }
 
 export interface ProcessResult {
   successes: number;
   failures: number;
-  //todo maybe consider permanent vs temp failures.
 }
 
 export interface EmailPage {

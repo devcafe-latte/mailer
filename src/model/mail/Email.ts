@@ -59,6 +59,8 @@ export class Email implements EmailContent {
   template?: string = null;
   language?: string = null;
 
+  transportId?: number = null;
+
   isValid(errors = []): boolean {
     if (!this.isValidAddress(this.from)) errors.push("'from' is not a valid address string");
     if (!this.isValidAddress(this.to)) errors.push("'to' is not a valid address string");

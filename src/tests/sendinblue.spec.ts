@@ -1,6 +1,7 @@
 import container from '../model/DiContainer';
 import { Email, EmailContent, MailStatus } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
+import { MailTransportType } from '../model/Settings';
 import { TestHelper } from './TestHelper';
 
 describe('Send using Sendinblue', () => {
@@ -16,7 +17,7 @@ describe('Send using Sendinblue', () => {
 
   beforeEach(async (done) => {
     th = await TestHelper.new();
-    container.settings.mailTransport = "sendinblue";
+    container.settings.mailTransport = MailTransportType.SENDINBLUE;
     mm = container.mailer;
 
     done();

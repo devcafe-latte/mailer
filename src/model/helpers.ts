@@ -1,3 +1,7 @@
+import container from './DiContainer';
+import { MailTransportType, DefaultMailSettings } from './Settings';
+import { MailgunSettings, SendInBlueSettings, Transport, SmtpSettings } from './Transport';
+
 export function isValidEmail(email: string) {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email.toLowerCase());
@@ -110,4 +114,52 @@ export function serializeObject(input: any, maxDepth = 10, currentDepth = 0) {
   } else {
     return input;
   }
+}
+
+export async function convertSettingsToTransports() {
+
+  //Mailgun
+  if (container.settings.mailgun.apiKey !== 'notakey') {
+    const t = new Transport();
+    t.active = true;
+    t.default = container.settings.mailTransport === MailTransportType.MAILGUN;
+    t.name = "Mailgun from Settings";
+    t.type = MailTransportType.MAILGUN;
+    await container.db.insert(t);
+    const mg: MailgunSettings = { ...container.settings.mailgun, transportId: t.id };
+    await container.db.insert('mailgunSettings', mg);
+  }
+
+  //SendInBlue
+  if (container.settings.sendInBlue.apiKey !== 'notakey') {
+    const t = new Transport();
+    t.active = true;
+    t.default = container.settings.mailTransport === MailTransportType.SENDINBLUE;
+    t.name = "SendInBlue from Settings";
+    t.type = MailTransportType.SENDINBLUE;
+    await container.db.insert(t);
+    const sib: SendInBlueSettings = { ...container.settings.sendInBlue, transportId: t.id };
+    await container.db.insert('sendInBlueSettings', sib);
+  }
+
+  //SMTP
+  if (container.settings.smtp.server !== 'notset') {
+    const t = new Transport();
+    t.active = true;
+    t.default = container.settings.mailTransport === MailTransportType.SMTP;
+    t.name = "SMTP from Settings";
+    t.type = MailTransportType.SMTP;
+    await container.db.insert(t);
+    const smtp: SmtpSettings = { ...container.settings.smtp, transportId: t.id };
+    await container.db.insert('smtpSettings', smtp);
+  }
+
+  //MOCK
+  const mock = new Transport();
+  mock.active = true;
+  mock.default = container.settings.mailTransport === MailTransportType.MOCK;
+  mock.name = "Mock Transport (Doesn't send mails)";
+  mock.type = MailTransportType.MOCK;
+  await container.db.insert(mock);
+
 }
