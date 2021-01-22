@@ -45,6 +45,27 @@ describe('Seed initial database', () => {
 
 });
 
+describe('Try the database', () => {
+
+  let th: TestHelper;
+
+  beforeEach(async (done) => {
+    th = await TestHelper.new();  
+    done();
+  });
+
+  afterEach(async (done) => {
+    await th.shutdown();
+    done();
+  });
+
+  it("ping database", async (done) => {
+    await container.db.ping();
+    done();
+  });
+
+});
+
 async function dropDatabase() {
   const settings = new Settings();
   const config = {
@@ -61,5 +82,4 @@ async function dropDatabase() {
   } catch (err) {
     console.log("Couldn't drop db to prepare");
   }
-  
 }

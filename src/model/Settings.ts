@@ -1,5 +1,6 @@
 import { Address } from './mail/Email';
 import { MailgunSettings, SendInBlueSettings, SmtpSettings } from './Transport';
+import { getEnum, getBoolValue } from './helpers';
 
 export class Settings {
   debug: boolean = (process.env.NODE_ENV !== "production");
@@ -19,63 +20,42 @@ export class Settings {
     language: process.env.DEFAULT_LANG || 'en',
   };
 
-  /* deprecated */
-  mailTransport: MailTransportType;
+  /* Used for built-in sttings */
+  mailTransport: MailTransportType = getEnum(MailTransportType, process.env.MAIL_TRANSPORT, MailTransportType.SMTP) as MailTransportType;
 
-  /* deprecated */
   smtp: SmtpSettings = {
     server: process.env.SMTP_SERVER || 'notset',
     port: Number(process.env.SMTP_PORT) || 465,
     user: process.env.SMTP_USER || 'user',
     pass: process.env.SMTP_PASS || 'pass',
-    secure: true,
+    secure: getBoolValue(process.env.SMTP_SECURE, true),
   }
 
-  /* deprecated */
   mailgun: MailgunSettings = {
     apiKey: process.env.MAILGUN_API_KEY || 'notakey',
     domain: process.env.MAILGUN_DOMAIN || 'mg.example.com',
     host: process.env.MAILGUN_HOST || 'api.eu.mailgun.net',
   }
 
-  /* deprecated */
   sendInBlue: SendInBlueSettings = {
     apiKey: process.env.SENDINBLUE_API_KEY || 'notakey',
     apiUrl: process.env.SENDINBLUE_URL || 'https://api.sendinblue.com/v2.0',
   };
 
-  constructor() {
-    this.smtp.secure = this.getBoolValue(process.env.SMTP_SECURE);
-    this.getTransportType();
-  }
+  constructor() {}
 
-  private getBoolValue(value: any): boolean {
-    if (value === undefined) return true;
-    if (value === "1") return true;
-    if (value === "true") return true;
-
-    return false;
-  }
-
-  private getTransportType() {
-    const def = MailTransportType.SMTP;
-
-    const setting: any = process.env.MAIL_TRANSPORT;
-
-    if (Object.values(MailTransportType).includes(setting)) {
-      this.mailTransport = setting;
-    } else {
-      this.mailTransport = def;
-    }
-  }
 };
+
+export enum SettingSource {
+  DATABASE = 'database',
+  ENVIRONMENT = 'environment',
+}
 
 export enum MailTransportType {
   MOCK = "mock",
   MAILGUN = "mailgun",
   SENDINBLUE = "sendinblue",
   SMTP = "smtp",
-  WEIGHTED = "weighted",
 }
 
 export interface DefaultMailSettings {

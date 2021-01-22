@@ -1,9 +1,19 @@
 import moment from 'moment';
-
-import { stripComplexTypes, toObject, cleanForSending, hasProperties, isValidEmail, selectType, serializeObject, convertSettingsToTransports } from '../model/helpers';
 import uuidv4 from 'uuid/v4';
-import { TestHelper } from './TestHelper';
+
 import container from '../model/DiContainer';
+import {
+  cleanForSending,
+  convertSettingsToTransports,
+  getEnum,
+  hasProperties,
+  isValidEmail,
+  selectType,
+  serializeObject,
+  stripComplexTypes,
+} from '../model/helpers';
+import { MailTransportType } from '../model/Settings';
+import { TestHelper } from './TestHelper';
 
 describe('Helpers', function() {
 
@@ -186,5 +196,24 @@ describe("Transport Conversion", () => {
     const postCount = await container.db.getValue("SELECT COUNT(id) FROM transport");
 
     expect(preCount).toBeLessThan(postCount);
+  });
+
+  it("getEnum", () => {
+    let value: string;
+    value = getEnum(MailTransportType, 'foo', MailTransportType.MAILGUN);
+    expect(value).toBe(MailTransportType.MAILGUN, "Input value was invalid, so default is used.");
+
+    value = getEnum(MailTransportType, MailTransportType.SENDINBLUE, MailTransportType.MAILGUN);
+    expect(value).toBe(MailTransportType.SENDINBLUE, "Input value was good");
+
+    value = getEnum(MailTransportType, 'sendinblue', 'mailgun');
+    expect(value).toBe(MailTransportType.SENDINBLUE, "Input value was good, as string");
+
+    try {
+      value = getEnum(MailTransportType, 'sendinblue', 'foo');
+      throw "shouldn't get here.";
+    } catch (err) {
+      expect(err.message).toContain("Not a valid default value");
+    }
   });
 });

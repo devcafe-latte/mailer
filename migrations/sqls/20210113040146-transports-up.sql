@@ -5,7 +5,7 @@ CREATE TABLE `transport` (
   `type` varchar(100) NOT NULL,
   `active` tinyint NOT NULL,
   `weight` int NULL,
-  `default` tinyint NOT NULL;
+  `default` tinyint NOT NULL
 );
 
 CREATE TABLE `mailgunSettings` (

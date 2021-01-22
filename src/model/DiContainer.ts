@@ -4,6 +4,7 @@ import { existsSync } from 'fs';
 import { Database } from './database/Database';
 import { MailManager } from './mail/MailManager';
 import { Settings } from './Settings';
+import { TransportManager } from './TransportManager';
 
 export class Container {
   private _ready: Promise<void>;
@@ -11,6 +12,7 @@ export class Container {
   settings: Settings;
   db: Database;
   mailer: MailManager;
+  tm: TransportManager;
 
   get debug(): boolean { return this.settings.debug; }
 
@@ -34,6 +36,7 @@ export class Container {
     await this.db.ready();
     
     this.mailer = new MailManager();
+    this.tm = new TransportManager();
   }
 
   async shutdown() {

@@ -17,7 +17,7 @@ describe('Send using Mailgun', () => {
 
   beforeEach(async (done) => {
     th = await TestHelper.new();
-    container.settings.mailTransport = MailTransportType.MAILGUN;
+    await th.setAsOnlyMailer(MailTransportType.MAILGUN);
     mm = container.mailer;
 
     done();

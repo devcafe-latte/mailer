@@ -10,39 +10,8 @@ import { Email, EmailContent, MailStatus, MailTemplate } from './Email';
 export class MailManager {
   static BACKOFF_DELAY_MINUTES = 5;
 
-  /* 
-    Transports are weighted, this allows us to send e.g. 30% of emails with transport 1, and 70% to transport 2.
-    If no weights are set (or set to 0), we will fallback on the (last) one marked as default. 
-    If none are marked as default, the first transport in the database will be used.
-   */
-  private _transports: { [key: number]: Transport } = {};
-  private _weights = [];
-  private _defaultTransport: Transport;
-
   constructor() {
-    this.reloadTransports();
-  }
-
-  async reloadTransports() {
-    const transports = await container.db.getRows<Transport>("SELECT * FROM transport WHERE active = 1");
-    //Convert from legacy settings
-    if (transports.length === 0) return this.convert();
-
-    this._transports = {};
-    this._weights = [];
-    for (let t of transports) {
-      this._transports[t.id] = t;
-      if (t.weight) this._weights.push(...Array(t.weight).fill(t.id));
-      if (t.default) this._defaultTransport = t;
-    }
-
-    //If no default is set, just use the first one.
-    if (!this._defaultTransport) this._defaultTransport = transports[0];
-  }
-
-  private async convert() {
-    await convertSettingsToTransports();
-    return this.reloadTransports();
+    //this.reloadTransports();
   }
 
   async getTemplates(): Promise<MailTemplate[]> {
@@ -189,18 +158,10 @@ export class MailManager {
 
   private async trySend(mail: Email) {
     try {
-      //If no transport, or it's a disabled one, set transport to something valid.
-      if (!mail.transportId || !this._transports[mail.transportId]) {
-        if (this._weights.length === 0) {
-          mail.transportId = this._defaultTransport.id;
-        } else {
-          //We select a 'random' one based on the weights.
-          const n = Math.floor(Math.random() * this._weights.length);
-          mail.transportId = this._weights[n];
-        }
-      }
+      const t = await container.tm.getTransport(mail.transportId);
+      mail.transportId = t.id;
 
-      const result = await this._transports[mail.transportId].getMailer().sendMail(mail.toNodeMailerMail());
+      const result = await t.getMailer().sendMail(mail.toNodeMailerMail());
       result.success = true;
 
       mail.sent = moment();

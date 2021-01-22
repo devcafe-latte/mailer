@@ -1,6 +1,7 @@
 import container from './DiContainer';
 import { MailTransportType, DefaultMailSettings } from './Settings';
 import { MailgunSettings, SendInBlueSettings, Transport, SmtpSettings } from './Transport';
+import { MailerError } from './MailerError';
 
 export function isValidEmail(email: string) {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -116,6 +117,25 @@ export function serializeObject(input: any, maxDepth = 10, currentDepth = 0) {
   }
 }
 
+export function getBoolValue(value: string, defaultValue = false): boolean {
+  if (value === undefined) return defaultValue;
+  if (value === "1") return true;
+  if (value === "true") return true;
+
+  return false;
+}
+
+export function getEnum(enumType: any, input: string, defaultValue: string) {
+  const values = Object.values(enumType);
+  if (!values.includes(defaultValue)) throw MailerError.new(`Not a valid default value for enum: ${defaultValue}`);
+
+  if (values.includes(input)) {
+    return input;
+  } else {
+    return defaultValue;
+  }
+}
+
 export async function convertSettingsToTransports() {
 
   //Mailgun
@@ -125,9 +145,9 @@ export async function convertSettingsToTransports() {
     t.default = container.settings.mailTransport === MailTransportType.MAILGUN;
     t.name = "Mailgun from Settings";
     t.type = MailTransportType.MAILGUN;
-    await container.db.insert(t);
-    const mg: MailgunSettings = { ...container.settings.mailgun, transportId: t.id };
-    await container.db.insert('mailgunSettings', mg);
+
+    t.mg = container.settings.mailgun
+    if (t.isValid()) await container.tm.add(t);
   }
 
   //SendInBlue
@@ -137,9 +157,9 @@ export async function convertSettingsToTransports() {
     t.default = container.settings.mailTransport === MailTransportType.SENDINBLUE;
     t.name = "SendInBlue from Settings";
     t.type = MailTransportType.SENDINBLUE;
-    await container.db.insert(t);
-    const sib: SendInBlueSettings = { ...container.settings.sendInBlue, transportId: t.id };
-    await container.db.insert('sendInBlueSettings', sib);
+
+    t.sib = container.settings.sendInBlue;
+    if (t.isValid()) await container.tm.add(t);
   }
 
   //SMTP
@@ -149,9 +169,9 @@ export async function convertSettingsToTransports() {
     t.default = container.settings.mailTransport === MailTransportType.SMTP;
     t.name = "SMTP from Settings";
     t.type = MailTransportType.SMTP;
-    await container.db.insert(t);
-    const smtp: SmtpSettings = { ...container.settings.smtp, transportId: t.id };
-    await container.db.insert('smtpSettings', smtp);
+
+    t.smtp = container.settings.smtp;
+    if (t.isValid()) await container.tm.add(t);
   }
 
   //MOCK

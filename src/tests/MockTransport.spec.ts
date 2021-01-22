@@ -3,11 +3,13 @@ import { EmailContent } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
+import { TransportManager } from '../model/TransportManager';
 
 describe('Basic Sending of messages', () => {
 
   let th: TestHelper;
   let mm: MailManager;
+  let tm: TransportManager;
   const mailContent: EmailContent = {
     to: "Coo van Leeuwen <Coo@covle.com>",
     from: "Jacky D <Jack@covle.com>",
@@ -17,9 +19,9 @@ describe('Basic Sending of messages', () => {
   };
 
   beforeEach(async (done) => {
-    process.env.MAIL_TRANSPORT = "mock";
     th = await TestHelper.new();
     mm = container.mailer;
+    tm = container.tm;
     
     done();
   });
@@ -31,10 +33,11 @@ describe('Basic Sending of messages', () => {
 
   
   it('gets mock transport', async () => {
-    const mailer: any = mm['getMailer']()
-    const transport: MockTransport = mailer.transporter;
-    
-    expect(transport.constructor.name).toBe("MockTransport");
+    const t = await container.tm.getTransport(1);
+    const mailer = t.getMailer();
+
+    const transporter: MockTransport = mailer.transporter as MockTransport;
+    expect(transporter.constructor.name).toBe("MockTransport");
   });
 
   it('Sends successful message with Mock', async () => {
@@ -43,10 +46,11 @@ describe('Basic Sending of messages', () => {
   });
 
   it('Gets send error with Mock transport', async () => {
-    const mailer: any = mm['getMailer']()
-    const transport: MockTransport = mailer.transporter;
+    const t = await tm.getTransport();
+    const mailer = t.getMailer();
+    const transporter: MockTransport = mailer.transporter as MockTransport;
 
-    transport.shouldError = true;
+    transporter.shouldError = true;
     
     const result = await mm.sendMail(mailContent);
     expect(result.success).toBe(false);

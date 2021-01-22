@@ -6,7 +6,7 @@ import { MockTransport } from '../model/MockTransport';
 import { MailTransportType } from '../model/Settings';
 import { TestHelper } from './TestHelper';
 
-process.env.MAIL_TRANSPORT = "mock";
+//process.env.MAIL_TRANSPORT = "mock";
 
 describe('Basic Sending of messages', () => {
 
@@ -33,23 +33,24 @@ describe('Basic Sending of messages', () => {
     done();
   });
 
-  it('tries to send an email without settings', async (done) => {
-    container.settings.smtp.server = "notset";
-    container.settings.mailTransport = MailTransportType.SMTP;
+  // No longer possible in the new structure
+  // it('tries to send an email without settings', async (done) => {
+  //   container.settings.smtp.server = "notset";
+  //   container.settings.mailTransport = MailTransportType.SMTP;
 
-    const result = await mm.sendMail(mailContent)
-    expect(result).not.toBeNull();
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("SMTP server not set.");
+  //   const result = await mm.sendMail(mailContent)
+  //   expect(result).not.toBeNull();
+  //   expect(result.success).toBe(false);
+  //   expect(result.error).toContain("SMTP server not set.");
 
-    const email = await container.db.getRow<Email>("SELECT * FROM `email` WHERE id = ?", [1], Email);
-    expect(email.error).toContain("server not set");
-    expect(email.retryAfter).not.toBeNull();
-    expect(email.sent).toBeNull();
-    expect(email.status).toBe(MailStatus.PENDING);
+  //   const email = await container.db.getRow<Email>("SELECT * FROM `email` WHERE id = ?", [1], Email);
+  //   expect(email.error).toContain("server not set");
+  //   expect(email.retryAfter).not.toBeNull();
+  //   expect(email.sent).toBeNull();
+  //   expect(email.status).toBe(MailStatus.PENDING);
 
-    done();
-  });
+  //   done();
+  // });
 
   it('sends an email', async (done) => {
     const result = await mm.sendMail(mailContent)
@@ -204,9 +205,10 @@ describe('Queueing and Processing', () => {
   });
 
   it('Processes until failure', async (done) => {
+    await container.db.query("DELETE FROM transport WHERE id > 1");
     const m = await mm.queueMail(mailContent);
-    const hacky: any = mm['getMailer']();
-    const mock: MockTransport = hacky.transporter;
+    const hacky = (await container.tm.getTransport()).getMailer()
+    const mock: MockTransport = hacky.transporter as MockTransport;
 
     mock.shouldError = true;
 

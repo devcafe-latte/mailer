@@ -4,7 +4,8 @@ import { readFileSync, existsSync } from 'fs';
 import { createConnection } from 'promise-mysql';
 
 import container from '../model/DiContainer';
-import { Settings } from '../model/Settings';
+import { convertSettingsToTransports } from '../model/helpers';
+import { Settings, MailTransportType } from '../model/Settings';
 
 export class TestHelper {
   private _jasmineTimeout;
@@ -47,6 +48,20 @@ export class TestHelper {
 
     //Kill this temporary connection.
     await connection.end();
+  }
+
+  async setAsOnlyMailer(type: MailTransportType) {
+    await container.db.query("DELETE FROM transport");
+    await convertSettingsToTransports();
+    const transports = await container.tm.get();
+    const found = transports.find(t => t.type === type);
+    if (!found) throw "Can't find transport of type " + type;
+
+    found.default = true;
+
+    await container.db.query("UPDATE `transport` SET `weight` = 0, `default` = 0");
+    await container.db.query("UPDATE `transport` SET `default` = 1 WHERE `id` = ?", [found.id]);
+    return found;
   }
 
   static async new(): Promise<TestHelper> {

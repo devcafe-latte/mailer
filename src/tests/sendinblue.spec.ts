@@ -17,7 +17,7 @@ describe('Send using Sendinblue', () => {
 
   beforeEach(async (done) => {
     th = await TestHelper.new();
-    container.settings.mailTransport = MailTransportType.SENDINBLUE;
+    await th.setAsOnlyMailer(MailTransportType.SENDINBLUE)
     mm = container.mailer;
 
     done();
