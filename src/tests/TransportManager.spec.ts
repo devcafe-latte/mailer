@@ -1,6 +1,7 @@
 import container from '../model/DiContainer';
 import { TestHelper } from './TestHelper';
 import { DataGenerator } from '../model/DataGenerator';
+import moment from 'moment';
 
 describe("Transport Manager Tests", () => {
 
@@ -14,7 +15,7 @@ describe("Transport Manager Tests", () => {
     await th.shutdown();
   });
 
-  it("gets Transport Stats", async () => {
+  it("gets all Transport Stats", async () => {
 
     const dg = new DataGenerator();
     const emails = [];
@@ -26,6 +27,28 @@ describe("Transport Manager Tests", () => {
     await container.db.insert(emails);
 
     const stats = await container.tm.getStats();
+    expect(stats.stats.length).toBe(3);
+    expect(stats.stats[0].count).toBe(13);
+    expect(stats.stats[1].count).toBe(14);
+    expect(stats.stats[2].count).toBe(13);
+  });
+
+
+  it("gets Transport Stats with dates", async () => {
+
+    const dg = new DataGenerator();
+    const emails = [];
+    for (let i = 1; i < 41; i++) {
+      const e = dg.getEmail(i);
+      emails.push(e);
+      e.transportId = (i % 3) + 1;
+    }
+    await container.db.insert(emails);
+
+    const start = moment().startOf('year');
+    const end = moment().endOf('day');
+
+    const stats = await container.tm.getStats(start, end);
     expect(stats.stats.length).toBe(3);
     expect(stats.stats[0].count).toBe(13);
     expect(stats.stats[1].count).toBe(14);

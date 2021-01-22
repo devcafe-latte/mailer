@@ -7,6 +7,7 @@ import { requiredBody } from '../middlewares';
 import { Transport } from '../Transport';
 import request from 'supertest';
 import moment from 'moment';
+import { Serializer } from '../Serializer';
 
 const router = express.Router();
 
@@ -152,11 +153,12 @@ router.get('/transports', async (req, res, next) => {
 
 router.get('/transport-stats', async (req, res, next) => {
   try {
-    const start = req.query.start ? moment(req.query.start) : null;
-    const end = req.query.end ? moment(req.query.end) : null;
+    const start = req.query.start ? moment.unix(req.query.start) : null;
+    const end = req.query.end ? moment.unix(req.query.end) : null;
+    
     const stats = await container.tm.getStats(start, end);
 
-    res.send({ status: 'ok', stats });
+    res.send({ status: 'ok', stats: Serializer.serialize(stats) });
   } catch (err) {
     next(err);
   }
