@@ -40,13 +40,14 @@ describe("Transport Manager Tests", () => {
     const emails = [];
     for (let i = 1; i < 41; i++) {
       const e = dg.getEmail(i);
+      e.sent = moment();
       emails.push(e);
       e.transportId = (i % 3) + 1;
     }
     await container.db.insert(emails);
 
     const start = moment().startOf('year');
-    const end = moment().endOf('day');
+    const end = moment().endOf('year');
 
     const stats = await container.tm.getStats(start, end);
     expect(stats.stats.length).toBe(3);
@@ -103,6 +104,6 @@ describe("Transport Manager Tests", () => {
     await container.tm.reloadTransports();
 
     const t = await container.tm.get(true);
-    expect(t.length).toBeGreaterThanOrEqual(2);
+    expect(t.length).toBeGreaterThanOrEqual(1);
   });
 })

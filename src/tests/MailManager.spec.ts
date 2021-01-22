@@ -354,7 +354,6 @@ describe('Templates', () => {
   });
 
   afterEach(async (done) => {
-    console.log("Shutting down");
     await th.shutdown();
     done();
   });
