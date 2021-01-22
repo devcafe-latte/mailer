@@ -1,5 +1,5 @@
 import { Address } from './mail/Email';
-import { MailgunSettings, SendInBlueSettings, SmtpSettings } from './Transport';
+import { MailgunSettings, SendInBlueSettings, SmtpSettings, SEND_IN_BLUE_DEFAULT_URL } from './Transport';
 import { getEnum, getBoolValue } from './helpers';
 
 export class Settings {
@@ -39,17 +39,12 @@ export class Settings {
 
   sendInBlue: SendInBlueSettings = {
     apiKey: process.env.SENDINBLUE_API_KEY || 'notakey',
-    apiUrl: process.env.SENDINBLUE_URL || 'https://api.sendinblue.com/v2.0',
+    apiUrl: process.env.SENDINBLUE_URL || SEND_IN_BLUE_DEFAULT_URL,
   };
 
   constructor() {}
 
 };
-
-export enum SettingSource {
-  DATABASE = 'database',
-  ENVIRONMENT = 'environment',
-}
 
 export enum MailTransportType {
   MOCK = "mock",

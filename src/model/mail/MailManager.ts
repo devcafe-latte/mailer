@@ -25,7 +25,7 @@ export class MailManager {
     const existing = await this.getTemplate(t.name, t.language);
     if (existing) throw MailerError.new('template-already-exists', 400);
 
-    await container.db.insert('template', t);
+    await container.db.insert(t, 'template');
     return t;
   }
 

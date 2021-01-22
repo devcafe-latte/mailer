@@ -5,6 +5,7 @@ import { EmailContent, Email } from '../model/mail/Email';
 import container from '../model/DiContainer';
 import { mailer } from '../Mailer';
 import { DataGenerator } from '../model/DataGenerator';
+import { MailTransportType } from '../model/Settings';
 
 TestHelper.setTestEnv();
 
@@ -253,7 +254,76 @@ describe("Mailer - Templates API", () => {
       language: 'en',
     };
     const result = await request(mailer.app).delete(`/templates/${data.name}/${data.language}`)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+
+    done();
+  });
+});
+
+describe("Mailer - Transport API", () => {
+  let th: TestHelper;
+
+  beforeEach(async (done) => {
+    th = await TestHelper.new();
+
+    done();
+  });
+
+  afterEach(async (done) => {
+    await th.shutdown();
+
+    done();
+  });
+
+  it("API get transports", async (done) => {
+    const result = await request(mailer.app).get("/transports")
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.transports.length).toBe(4);
+
+    done();
+  });
+
+  it("API post transports", async (done) => {
+    const data: any = {
+      name: 'posted-1',
+      type: MailTransportType.MAILGUN,
+      mg: {
+        apiKey: 'some-posted-api-key',
+        domain: 'some-domain.com',
+        host: 'api.mailgun.net',
+      },
+    };
+    const result = await request(mailer.app).post("/transports")
       .send(data)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.transport.id).toBeGreaterThanOrEqual(4);
+
+    done();
+  });
+
+  it("API put transports", async (done) => {
+    const data = {
+      id: 1,
+      name: 'schnitzel',
+    };
+    const result = await request(mailer.app).put("/transports")
+      .send(data)
+      .expect(200);
+    const body = result.body;
+    expect(body.status).toBe("ok");
+    expect(body.transport.name).toBe("schnitzel");
+
+    done();
+  });
+
+  it("API DELETE templates", async (done) => {
+    const result = await request(mailer.app).delete(`/transports/1`)
       .expect(200);
     const body = result.body;
     expect(body.status).toBe("ok");

@@ -6,44 +6,45 @@ import { Settings } from '../model/Settings';
 
 const dbName = "mailer_for_seed_test";
 
-describe('Seed initial database', () => {
+//todo make seeding a thing again
+// describe('Seed initial database', () => {
 
-  beforeEach(async (done) => {
-    process.env.DB_NAME = dbName;
-    TestHelper.setTestEnv();
-    await dropDatabase();
-    done();
-  });
+//   beforeEach(async (done) => {
+//     process.env.DB_NAME = dbName;
+//     TestHelper.setTestEnv();
+//     await dropDatabase();
+//     done();
+//   });
 
-  afterEach(async (done) => {
-    delete process.env.DB_NAME;
-    done();
-  });
+//   afterEach(async (done) => {
+//     delete process.env.DB_NAME;
+//     done();
+//   });
 
-  it("Does not seed", async (done) => {
-    delete process.env.SEED_DB;
+//   it("Does not seed", async (done) => {
+//     delete process.env.SEED_DB;
 
-    try {
-      await container.restart();
-      //some error?
-      await container.db.ping();
-      throw "We shouldn't get here.";
-    } catch (err) {
-      expect(err).toContain("Can't connect");
-    }
+//     try {
+//       await container.restart();
+//       //some error?
+//       await container.db.ping();
+//       throw "We shouldn't get here.";
+//     } catch (err) {
+//       expect(err).toContain("Can't connect");
+//     }
 
-    done();
-  });
+//     done();
+//   });
 
-  it("Tries to seed", async (done) => {
-    process.env.SEED_DB = "1";
-    await container.restart();
-    await container.db.ping();
+//   it("Tries to seed", async (done) => {
+//     process.env.SEED_DB = "1";
+//     await container.restart();
+//     await container.db.ping();
 
-    done();
-  });
+//     done();
+//   });
 
-});
+// });
 
 describe('Try the database', () => {
 

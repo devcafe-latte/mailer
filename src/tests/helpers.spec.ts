@@ -9,7 +9,6 @@ import {
   hasProperties,
   isValidEmail,
   selectType,
-  serializeObject,
   stripComplexTypes,
 } from '../model/helpers';
 import { MailTransportType } from '../model/Settings';
@@ -122,60 +121,6 @@ describe('Helpers', function() {
     expect(selectType("object", 3, true, "bluh", [1, 2, 3], { foo: "bar" })).toEqual( { foo: 'bar' } );
     expect(selectType("array", 3, true, "bluh", [1, 2, 3], { foo: "bar" })).toEqual([1, 2, 3]);
     expect(selectType("number", true, "bluh", [1, 2, 3], { foo: "bar" })).toBeUndefined();
-  });
-});
-
-describe('serializeObject', () => {
-  it("takes a simple value", () => {
-    expect(serializeObject(1)).toBe(1);
-    expect(serializeObject("foo")).toBe("foo");
-    expect(serializeObject(false)).toBe(false);
-  });
-
-  it("takes a simple array", () => {
-    const array = [1, "foo", false]
-    const result = serializeObject(array);
-    expect(result).toEqual(array);
-  });
-
-  it("takes a simple Object", () => {
-    const obj = { num: 1, str: "foo", bool: false };
-    const result = serializeObject(obj);
-    expect(result).toEqual(obj);
-  });
-
-  it("takes a complex Object", () => {
-    const input = { 
-      d: moment().startOf('week'),
-      str: 'foo',
-      o: { serialize: () => { return { r: 'serialized'} } }
-    };
-
-    const expected = { 
-      d: moment().startOf('week').unix(),
-      str: 'foo',
-      o: { r: 'serialized' }
-    };
-
-    const result = serializeObject(input);
-    expect(result).toEqual(expected);
-  });
-
-  it("takes an array with a complex Object", () => {
-    const input = { 
-      d: moment().startOf('week'),
-      str: 'foo',
-      o: { serialize: () => { return { r: 'serialized'} } }
-    };
-
-    const expected = { 
-      d: moment().startOf('week').unix(),
-      str: 'foo',
-      o: { r: 'serialized' }
-    };
-
-    const result = serializeObject([input]);
-    expect(result).toEqual([expected]);
   });
 });
 

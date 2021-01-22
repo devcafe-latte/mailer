@@ -3,10 +3,8 @@ import container from '../model/DiContainer';
 import { Email, EmailContent, MailStatus, MailTemplate } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
-import { MailTransportType } from '../model/Settings';
 import { TestHelper } from './TestHelper';
-
-//process.env.MAIL_TRANSPORT = "mock";
+import { Serializer } from '../model/Serializer';
 
 describe('Basic Sending of messages', () => {
 
@@ -19,7 +17,6 @@ describe('Basic Sending of messages', () => {
     text: "Test 123",
     html: "<h5>Test 123</h5> <p>test <strong>strong</strong></p>"
   };
-  //let dg = new DataGenerator();
 
   beforeEach(async (done) => {
     th = await TestHelper.new();
@@ -160,7 +157,7 @@ describe('Queueing and Processing', () => {
     const m = await mm.queueMail(mailContent);
     expect(m.id).toBe(1);
     const gotten = await container.db.getRow<Email>("SELECT * FROM `email` WHERE id = ?", [1], Email);
-    expect(m.serialize()).toEqual(gotten.serialize());
+    expect(Serializer.serialize(m)).toEqual(Serializer.serialize(gotten));
 
     done();
   });
@@ -171,7 +168,7 @@ describe('Queueing and Processing', () => {
     const m = await mm.queueMail(content);
     expect(m.id).toBe(1);
     const gotten = await container.db.getRow<Email>("SELECT * FROM `email` WHERE id = ?", [1], Email);
-    expect(m.serialize()).toEqual(gotten.serialize());
+    expect(Serializer.serialize(m)).toEqual(Serializer.serialize(gotten));
 
     expect(gotten.replyTo).toBe("karel <karel@example.com>");
 

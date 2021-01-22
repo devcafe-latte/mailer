@@ -1,21 +1,11 @@
 import container from './DiContainer';
-import { MailTransportType, DefaultMailSettings } from './Settings';
-import { MailgunSettings, SendInBlueSettings, Transport, SmtpSettings } from './Transport';
 import { MailerError } from './MailerError';
+import { MailTransportType } from './Settings';
+import { Transport } from './Transport';
 
 export function isValidEmail(email: string) {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email.toLowerCase());
-}
-
-export function toObject<T>(type: { new(): T }, data: any): T {
-  const o = new type();
-  for (let key in o) {
-    if (!o.hasOwnProperty(key)) continue;
-
-    if (data[key] !== undefined) o[key] = data[key];
-  }
-  return o;
 }
 
 export function hasProperties(object: any, properties: string[], checkAsString = false): boolean {
@@ -46,6 +36,9 @@ export function cleanForSending(body: any, depth = 1) {
     //Convert Moment objects to unix timestamp
     if (typeof body[key] === "object" && body[key] !== null && body[key].constructor.name === 'Moment') {
       body[key] = body[key].unix();
+    } else if (key.startsWith('_')) {
+      //Remove internal props that start with underscores.
+      delete body[key];
     } else if (typeof body[key] === "object" && body[key] !== null) {
       cleanForSending(body[key], depth + 1);
     }
@@ -84,39 +77,6 @@ export function selectType(type: string, ...args: any) {
   return undefined;
 }
 
-export function serializeObject(input: any, maxDepth = 10, currentDepth = 0) {
-  if (currentDepth > maxDepth) return input;
-
-  //Traverse input 
-  // Array? recursive call
-  // Moment? call unix()
-  // serialize? call serialize()
-  // object? recursive call
-
-  let result: any;
-  if (Array.isArray(input)) {
-    result = [];
-    for (let i of input) {
-      result.push(serializeObject(i, maxDepth, currentDepth + 1));
-    }
-    return result;
-  } else if (typeof input === "object") {
-    const className = input.constructor.name;
-
-    if (className === 'Moment') return input.unix();
-    if (typeof input.serialize === "function") return input.serialize();
-
-    result = {};
-    for (let k in input) {
-      if (!input.hasOwnProperty(k)) continue;
-      result[k] = serializeObject(input[k], maxDepth, currentDepth + 1);
-    }
-    return result;
-  } else {
-    return input;
-  }
-}
-
 export function getBoolValue(value: string, defaultValue = false): boolean {
   if (value === undefined) return defaultValue;
   if (value === "1") return true;
@@ -137,7 +97,6 @@ export function getEnum(enumType: any, input: string, defaultValue: string) {
 }
 
 export async function convertSettingsToTransports() {
-
   //Mailgun
   if (container.settings.mailgun.apiKey !== 'notakey') {
     const t = new Transport();

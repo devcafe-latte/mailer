@@ -24,6 +24,7 @@
     "@types/seedrandom": "^2.4.28",
     "@types/uuid": "^3.4.5",
     "body-parser": "^1.19.0",
+    "cereal-bowl": "^1.0.2",
     "db-migrate": "^0.11.11",
     "db-migrate-mysql": "^2.1.0",
     "dotenv": "^8.0.0",

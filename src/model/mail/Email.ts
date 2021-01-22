@@ -1,9 +1,10 @@
 import moment, { Moment } from 'moment';
 
-import { isValidEmail, toObject } from '../helpers';
+import { isValidEmail } from '../helpers';
 import { DefaultMailSettings } from '../Settings';
 
 import _ from 'lodash';
+import { ObjectMapping, Serializer } from '../Serializer';
 
 export interface EmailContent {
   from?: string | Address;
@@ -126,22 +127,14 @@ export class Email implements EmailContent {
   }
 
   static deserialize(data: any): Email {
-    let m = toObject<Email>(Email, data);
 
-    if (data.created) m.created = moment.unix(data.created);
-    if (data.retryAfter) m.retryAfter = moment.unix(data.retryAfter);
-    if (data.sent) m.sent = moment.unix(data.sent);
+    const m: ObjectMapping = {
+      created: 'moment',
+      retryAfter: 'moment',
+      sent: 'moment',
+    };
 
-    return m;
+    return Serializer.deserialize(Email, data, m);
   }
 
-  serialize() {
-    const o: any = { ...this };
-
-    if (this.created) o.created = this.created.unix();
-    if (this.retryAfter) o.retryAfter = this.retryAfter.unix();
-    if (this.sent) o.sent = this.sent.unix();
-
-    return o;
-  }
 }

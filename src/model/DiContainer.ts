@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { existsSync } from 'fs';
+import { Database } from 'cereal-bowl';
 
-import { Database } from './database/Database';
 import { MailManager } from './mail/MailManager';
 import { Settings } from './Settings';
 import { TransportManager } from './TransportManager';
@@ -32,9 +32,15 @@ export class Container {
     if (existsSync('.env')) dotenv.config();
 
     this.settings = new Settings();
-    this.db = new Database();
+    this.db = new Database({
+      database: this.settings.dbName,
+      host: this.settings.dbHost,
+      user: this.settings.dbUser,
+      password: this.settings.dbPass,
+      port: this.settings.dbPort
+    });
     await this.db.ready();
-    
+
     this.mailer = new MailManager();
     this.tm = new TransportManager();
   }

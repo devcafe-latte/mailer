@@ -2,9 +2,11 @@ import bodyParser from 'body-parser';
 import express = require('express');
 
 import container from '../DiContainer';
-import { requiredBody } from '../middlewares';
 import { cleanForSending } from '../helpers';
-import { MailerError } from '../MailerError';
+import { requiredBody } from '../middlewares';
+import { Transport } from '../Transport';
+import request from 'supertest';
+import moment from 'moment';
 
 const router = express.Router();
 
@@ -137,6 +139,66 @@ router.delete('/templates/:name/:language', async (req, res, next) => {
 });
 /* End region */
 
+/* Region Transports */
+router.get('/transports', async (req, res, next) => {
+  try {
+    const result = await container.tm.get(false);
+    cleanForSending(result);
+    res.send({ status: 'ok', transports: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/transport-stats', async (req, res, next) => {
+  try {
+    const start = req.query.start ? moment(req.query.start) : null;
+    const end = req.query.end ? moment(req.query.end) : null;
+    const stats = await container.tm.getStats(start, end);
+
+    res.send({ status: 'ok', stats });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/transports', requiredBody('name', 'type'), async (req, res, next) => {
+  try {
+    const transport = Transport.deserialize(req.body);
+    if (transport.active === undefined || transport.active === null) transport.active = true;
+    transport.default = Boolean(transport.default);
+    transport.weight = Number(transport.weight);
+
+    await container.tm.add(transport);
+    cleanForSending(transport);
+    res.send({ status: 'ok', transport });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/transports', requiredBody('id'), async (req, res, next) => {
+  try {
+    const transport = await container.tm.getById(req.body.id);
+    transport.patch(req.body);
+    await container.tm.update(transport);
+    cleanForSending(transport)
+    res.send({ status: 'ok', transport });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/transports/:id', async (req, res, next) => {
+  try {
+    await container.tm.delete(Number(req.params.id));
+    res.send({ status: 'ok' });
+  } catch (err) {
+    next(err);
+  }
+});
+/* End region */
+
 //404 Handler
 router.use((req, res) => {
   res.status(404);
@@ -152,10 +214,13 @@ router.use((req, res) => {
 router.use((err, req, res, next) => {
   res.status(err.status || 500);
 
+  let error: string;
+  if (typeof err === "string") error = err;
+
   const data = {
     status: "failed",
     path: req.path,
-    reason: err.message || "Unknown Error",
+    reason: error || err.message || err.code || "Unknown Error",
     error: undefined
   }
 

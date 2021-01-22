@@ -1,12 +1,14 @@
-import { MailTransportType } from './Settings';
-import Mailer from 'nodemailer/lib/mailer';
 import nodemailer from 'nodemailer';
+import mg from 'nodemailer-mailgun-transport';
+import sendinBlue from 'nodemailer-sendinblue-transport';
+import Mailer from 'nodemailer/lib/mailer';
+import { addEmitHelper } from 'typescript';
+
 import { MailerError } from './MailerError';
 import { MockTransport } from './MockTransport';
-import sendinBlue from 'nodemailer-sendinblue-transport';
-import mg, { MailgunTransport } from 'nodemailer-mailgun-transport';
-import { toObject } from './helpers';
-import mailgunTransport from 'nodemailer-mailgun-transport';
+import { Serializer } from './Serializer';
+import { MailTransportType } from './Settings';
+import { Moment } from 'moment';
 
 export class Transport {
   id: number = null;
@@ -36,6 +38,27 @@ export class Transport {
     }
   }
 
+  patch(data: any) {
+    const allowed = ['name', 'weight', 'default', 'active'];
+    for (let a of allowed) {
+      if (data[a] !== undefined) this[a] = data[a];
+    }
+
+    switch (this.type) {
+      case MailTransportType.MAILGUN:
+        this.mg = {...this.mg, ...data.mg};
+        break;
+      case MailTransportType.SENDINBLUE:
+        this.sib = {...this.sib, ...data.sib};
+        break;
+      case MailTransportType.SMTP:
+        this.smtp = {...this.smtp, ...data.smtp};
+        break;
+      default:
+        break;
+    }
+  }
+
   private isValidMailgun() {
     if (!this.mg) return false;
     if (!this.mg.apiKey) return false;
@@ -48,7 +71,7 @@ export class Transport {
   private isValidSendInBlue() {
     if (!this.sib)return false;
     if (!this.sib.apiKey) return false;
-    if (!this.sib.apiUrl) return false;
+    if (!this.sib.apiUrl) this.sib.apiUrl = SEND_IN_BLUE_DEFAULT_URL;
 
     return true;
   }
@@ -84,7 +107,7 @@ export class Transport {
         this._mailer = nodemailer.createTransport(sendinBlue(this.sib));
       } else if (this.type === MailTransportType.MAILGUN) {
         if (!this.mg) throw MailerError.new("Missing settings for Mailgun", 500);
-        const options: mailgunTransport.Options = {
+        const options = {
           auth: {
             api_key: this.mg.apiKey,
             domain: this.mg.domain,
@@ -102,11 +125,11 @@ export class Transport {
   }
 
   static deserialize(data: any): Transport {
-    let t = toObject<Transport>(Transport, data);
-
-    return t;
+    return Serializer.deserialize(Transport, data);
   }
 }
+
+export const SEND_IN_BLUE_DEFAULT_URL = 'https://api.sendinblue.com/v2.0';
 
 export type settingsType = SendInBlueSettings | MailgunSettings | SmtpSettings;
 
@@ -132,4 +155,15 @@ export interface SmtpSettings extends TransportSettings {
 export interface TransportSettings {
   id?: number;
   transportId?: number;
+}
+
+export class TransportStats {
+  start: Moment = null;
+  end: Moment = null;
+  stats: TransportStat[] = [];
+}
+
+export interface TransportStat {
+  transportId: number;
+  count: number;
 }
