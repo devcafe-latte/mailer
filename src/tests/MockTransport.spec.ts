@@ -4,6 +4,7 @@ import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
 import { TransportManager } from '../model/TransportManager';
+import { MailTransportType } from '../model/Settings';
 
 describe('Basic Sending of messages', () => {
 
@@ -46,9 +47,9 @@ describe('Basic Sending of messages', () => {
   });
 
   it('Gets send error with Mock transport', async () => {
+    await th.setAsOnlyMailer(MailTransportType.MOCK);
     const t = await tm.getTransport();
-    const mailer = t.getMailer();
-    const transporter: MockTransport = mailer.transporter as MockTransport;
+    const transporter: MockTransport = t.getMailer().transporter as MockTransport;
 
     transporter.shouldError = true;
     

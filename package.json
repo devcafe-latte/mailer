@@ -9,7 +9,7 @@
     "start": "nodemon",
     "test": "jasmine-ts --config=jasmine.json",
     "testJunit": "ts-node ./node_modules/jasmine-xml-reporter/bin/jasmine.js --junitreport --config=jasmine.json --output=\"./junit\"",
-    "testNoThirdParties": "ts-node ./node_modules/jasmine-xml-reporter/bin/jasmine.js --junitreport --config=jasmine-no-third-parties.json --output=\"./junit\"",
+    "testNoThirdParties": "ts-node ./node_modules/jasmine-xml-reporter/bin/jasmine.js --junitreport --random=false --config=jasmine-no-third-parties.json --output=\"./junit\"",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.spec.ts\" jasmine-ts --config=jasmine.json"
   },
   "author": "Co van Leeuwen <coo@covle.com>",
