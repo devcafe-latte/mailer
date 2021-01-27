@@ -39,7 +39,7 @@ export class Transport {
   }
 
   patch(data: any) {
-    const allowed = ['name', 'weight', 'default', 'active'];
+    const allowed = ['name', 'weight', 'default', 'active', 'domain'];
     for (let a of allowed) {
       if (data[a] !== undefined) this[a] = data[a];
     }
