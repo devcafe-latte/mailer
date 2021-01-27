@@ -60,3 +60,8 @@ docker run -it \
   --network some_network \
   mailer node /app/build/cron.js
 ```
+
+# Todo
+
+[] Support multiple domains per Transport
+[] Don't use nodemailer except for smtp

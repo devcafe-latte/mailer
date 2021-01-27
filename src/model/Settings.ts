@@ -23,6 +23,8 @@ export class Settings {
   /* Used for built-in sttings */
   mailTransport: MailTransportType = getEnum(MailTransportType, process.env.MAIL_TRANSPORT, MailTransportType.SMTP) as MailTransportType;
 
+  domain = process.env.MAILGUN_DOMAIN || 'mg.example.com';
+
   smtp: SmtpSettings = {
     server: process.env.SMTP_SERVER || 'notset',
     port: Number(process.env.SMTP_PORT) || 465,
@@ -33,7 +35,6 @@ export class Settings {
 
   mailgun: MailgunSettings = {
     apiKey: process.env.MAILGUN_API_KEY || 'notakey',
-    domain: process.env.MAILGUN_DOMAIN || 'mg.example.com',
     host: process.env.MAILGUN_HOST || 'api.eu.mailgun.net',
   }
 

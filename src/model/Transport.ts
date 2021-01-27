@@ -1,14 +1,13 @@
+import { Moment } from 'moment';
 import nodemailer from 'nodemailer';
 import mg from 'nodemailer-mailgun-transport';
 import sendinBlue from 'nodemailer-sendinblue-transport';
 import Mailer from 'nodemailer/lib/mailer';
-import { addEmitHelper } from 'typescript';
 
 import { MailerError } from './MailerError';
 import { MockTransport } from './MockTransport';
 import { Serializer } from './Serializer';
 import { MailTransportType } from './Settings';
-import { Moment } from 'moment';
 
 export class Transport {
   id: number = null;
@@ -17,6 +16,7 @@ export class Transport {
   active: boolean = null;
   weight: number = null;
   default: boolean = null;
+  domain?: string = null;
 
   private _mailer?: Mailer = null;
   sib?: SendInBlueSettings = null;
@@ -62,7 +62,7 @@ export class Transport {
   private isValidMailgun() {
     if (!this.mg) return false;
     if (!this.mg.apiKey) return false;
-    if (!this.mg.domain) return false;
+    if (!this.domain) return false;
     if (!this.mg.host) return false;
 
     return true;
@@ -110,11 +110,10 @@ export class Transport {
         const options = {
           auth: {
             api_key: this.mg.apiKey,
-            domain: this.mg.domain,
+            domain: this.domain,
           },
           host: this.mg.host,
         }
-        console.log("Mailgun settings", this.mg, options);
         this._mailer = nodemailer.createTransport(mg(options));
       } else {
         throw "Unknown Transport: " + this.type;
@@ -140,7 +139,6 @@ export interface SendInBlueSettings extends TransportSettings {
 
 export interface MailgunSettings extends TransportSettings {
   apiKey: string;
-  domain: string;
   host: string;
 }
 

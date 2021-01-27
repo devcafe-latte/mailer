@@ -291,9 +291,9 @@ describe("Mailer - Transport API", () => {
     const data: any = {
       name: 'posted-1',
       type: MailTransportType.MAILGUN,
+      domain: 'some-domain.com',
       mg: {
         apiKey: 'some-posted-api-key',
-        domain: 'some-domain.com',
         host: 'api.mailgun.net',
       },
     };

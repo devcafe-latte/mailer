@@ -1,5 +1,6 @@
-import { EmailContent, Email } from '../model/mail/Email';
+import { Email, EmailContent } from '../model/mail/Email';
 import { DefaultMailSettings } from '../model/Settings';
+
 describe('Email Tests', () => {
   const defaults: DefaultMailSettings = {
     from: { address: 'noreply@example.com' },
@@ -26,6 +27,18 @@ describe('Email Tests', () => {
 
     const m2 = Email.fromMailContent(validContent2, defaults);
     expect(m2.isValid()).toBe(true);
+  });
+
+  it("tests setFromDomain", () => {
+    //Format 1
+    const m = Email.fromMailContent(validContent1, defaults);
+    m.setFromDomain('foo.bar.com');
+    expect(m.from).toBe("Peter <blup@foo.bar.com>");
+
+    m.from = "knop@knuk.foo"
+    m.setFromDomain('foo.bar.com');
+    expect(m.from).toBe("knop@foo.bar.com");
+
   });
 
   it("tests validity", () => {
@@ -58,10 +71,6 @@ describe('Email Tests', () => {
 
     m.from = "coo@covle.com";
     expect(m.isValid()).toBe(true);
-
-
   });
-
-
-
+  
 });

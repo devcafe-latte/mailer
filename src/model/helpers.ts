@@ -104,6 +104,7 @@ export async function convertSettingsToTransports() {
     t.default = container.settings.mailTransport === MailTransportType.MAILGUN;
     t.name = "Mailgun from Settings";
     t.type = MailTransportType.MAILGUN;
+    t.domain = container.settings.domain;
 
     t.mg = container.settings.mailgun
     if (t.isValid()) await container.tm.add(t);

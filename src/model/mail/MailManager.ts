@@ -160,6 +160,7 @@ export class MailManager {
     try {
       const t = await container.tm.getTransport(mail.transportId);
       mail.transportId = t.id;
+      mail.setFromDomain(t.domain);
 
       const result = await t.getMailer().sendMail(mail.toNodeMailerMail());
       result.success = true;

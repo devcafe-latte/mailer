@@ -2,6 +2,7 @@ import moment, { Moment } from 'moment';
 
 import { isValidEmail } from '../helpers';
 import { DefaultMailSettings } from '../Settings';
+import addressparser from 'addressparser';
 
 import _ from 'lodash';
 import { ObjectMapping, Serializer } from '../Serializer';
@@ -43,7 +44,7 @@ export const MailStatus = {
 export class Email implements EmailContent {
   id: number = null;
 
-  from: string = null;
+  from: string = null; //Can be just an email address, or a string like "Peter Doink <peter@thefactory.foo>"
   to: string = null;
   replyTo?: string = null;
   subject: string = null;
@@ -61,6 +62,25 @@ export class Email implements EmailContent {
   language?: string = null;
 
   transportId?: number = null;
+  
+  /**
+   * Replace the FROM domain with the domain set by the transport (if any)
+   *
+   * @param {string} [domain]
+   * @returns
+   * @memberof Email
+   */
+  setFromDomain(domain?: string) {
+    if (!domain) return;
+
+    const address = addressparser(this.from)[0];
+    const parts = address.address.split("@");
+    parts.pop();
+    parts.push(domain);
+    address.address = parts.join("@");
+
+    this.from = Email.addressToString(address);
+  }
 
   isValid(errors = []): boolean {
     if (!this.isValidAddress(this.from)) errors.push("'from' is not a valid address string");
