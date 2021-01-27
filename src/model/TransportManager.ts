@@ -78,6 +78,7 @@ export class TransportManager {
       await container.db.insert(t.smtp, 'smtpSettings');
     }
 
+    await this.reloadTransports();
     return t;
   }
 
@@ -177,9 +178,12 @@ export class TransportManager {
       t.smtp.transportId = t.id;
       await container.db.update({ object: t.smtp, table: 'smtpSettings' });
     }
+
+    await this.reloadTransports();
   }
 
   async delete(id: number) {
     await container.db.delete("transport", id);
+    await this.reloadTransports();
   }
 }

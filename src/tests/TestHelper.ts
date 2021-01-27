@@ -53,14 +53,18 @@ export class TestHelper {
   async setAsOnlyMailer(type: MailTransportType) {
     await container.db.query("DELETE FROM transport");
     await convertSettingsToTransports();
+
     const transports = await container.tm.get();
     const found = transports.find(t => t.type === type);
     if (!found) throw "Can't find transport of type " + type;
 
     found.default = true;
+    found.active = true;
 
-    await container.db.query("UPDATE `transport` SET `weight` = 0, `default` = 0");
-    await container.db.query("UPDATE `transport` SET `default` = 1 WHERE `id` = ?", [found.id]);
+    await container.db.query("UPDATE `transport` SET `weight` = 0, `default` = 0, `active` = 0");
+    await container.db.update({ object: found });
+    // await container.db.query("UPDATE `transport` SET `default` = 1, `active` = 1 WHERE `id` = ?", [found.id]);
+    await container.tm.reloadTransports();
     return found;
   }
 

@@ -1,9 +1,7 @@
 import moment from 'moment';
 
 import container from '../DiContainer';
-import { convertSettingsToTransports } from '../helpers';
 import { MailerError } from '../MailerError';
-import { Transport } from '../Transport';
 import { Email, EmailContent, MailStatus, MailTemplate } from './Email';
 
 

@@ -82,7 +82,13 @@ describe("Transport Manager Tests", () => {
     const sorted = Object.values(counter).sort((a, b) => b.count - a.count);
     expect(sorted[0].id).toBe(2, "Transport 2 has a weight of 30");
     expect(sorted[1].id).toBe(3, "Transport 3 has a weight of 15");
+    expect(sorted[1].count).toBeGreaterThan(0);
+    expect(sorted[1].count).toBeLessThanOrEqual(sorted[0].count);
+
     expect(sorted[2].id).toBe(1, "Transport 1 has a weight of 5");
+    expect(sorted[2].count).toBeGreaterThan(0);
+    expect(sorted[2].count).toBeLessThanOrEqual(sorted[1].count);
+
     expect(sorted[3].id).toBe(4, "Transport 1 has a weight of 50, but is disabled");
     expect(sorted[3].count).toBe(0);
   });
