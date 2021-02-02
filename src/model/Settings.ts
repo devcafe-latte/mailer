@@ -49,6 +49,7 @@ export class Settings {
 
 export enum MailTransportType {
   MOCK = "mock",
+  MOCK_FAIL = "mock-fail",
   MAILGUN = "mailgun",
   SENDINBLUE = "sendinblue",
   SMTP = "smtp",

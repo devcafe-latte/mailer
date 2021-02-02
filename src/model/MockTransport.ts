@@ -4,10 +4,11 @@ export class MockTransport {
   name: "Mock Transport";
   version: "1.0";
 
-  shouldError = false;
   errorMessage = "Mock error thrown";
 
   sent: any[] = [];
+
+  constructor(public shouldError = false) {}
 
   send(mail: MailMessage, callback: Function) {
     if (this.shouldError) throw this.errorMessage;

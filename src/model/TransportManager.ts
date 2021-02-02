@@ -1,9 +1,10 @@
+import { Moment } from 'moment';
+
 import container from './DiContainer';
 import { convertSettingsToTransports } from './helpers';
 import { MailerError } from './MailerError';
 import { MailTransportType } from './Settings';
-import { Transport, MailgunSettings, TransportSettings, SendInBlueSettings, SmtpSettings, TransportStats } from './Transport';
-import { Moment } from 'moment';
+import { MailgunSettings, SendInBlueSettings, SmtpSettings, Transport, TransportStats } from './Transport';
 
 export class TransportManager {
 
@@ -77,8 +78,7 @@ export class TransportManager {
       t.smtp.transportId = t.id;
       await container.db.insert(t.smtp, 'smtpSettings');
     }
-
-    await this.reloadTransports();
+    
     return t;
   }
 
@@ -178,12 +178,9 @@ export class TransportManager {
       t.smtp.transportId = t.id;
       await container.db.update({ object: t.smtp, table: 'smtpSettings' });
     }
-
-    await this.reloadTransports();
   }
 
   async delete(id: number) {
     await container.db.delete("transport", id);
-    await this.reloadTransports();
   }
 }

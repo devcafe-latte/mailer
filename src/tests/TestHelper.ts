@@ -6,6 +6,7 @@ import { createConnection } from 'promise-mysql';
 import container from '../model/DiContainer';
 import { convertSettingsToTransports } from '../model/helpers';
 import { Settings, MailTransportType } from '../model/Settings';
+import { Transport } from '../model/Transport';
 
 export class TestHelper {
   private _jasmineTimeout;
@@ -52,9 +53,16 @@ export class TestHelper {
 
   async setAsOnlyMailer(type: MailTransportType) {
     await container.db.query("DELETE FROM transport");
+    const mockFail = new Transport();
+    mockFail.type = MailTransportType.MOCK_FAIL;
+    mockFail.name = "Failing Mock";
+    mockFail.active = false;
+    mockFail.default = false;
+    mockFail.weight = 0;
+    await container.db.insert(mockFail);
     await convertSettingsToTransports();
 
-    const transports = await container.tm.get();
+    const transports = await container.tm.get(false);
     const found = transports.find(t => t.type === type);
     if (!found) throw "Can't find transport of type " + type;
 

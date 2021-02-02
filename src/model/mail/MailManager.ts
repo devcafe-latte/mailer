@@ -8,9 +8,7 @@ import { Email, EmailContent, MailStatus, MailTemplate } from './Email';
 export class MailManager {
   static BACKOFF_DELAY_MINUTES = 5;
 
-  constructor() {
-    //this.reloadTransports();
-  }
+  constructor() { }
 
   async getTemplates(): Promise<MailTemplate[]> {
     const sql = "SELECT * FROM `template`";
@@ -117,6 +115,7 @@ export class MailManager {
 
     await container.db.insert(mail);
 
+    await container.tm.reloadTransports();
     return await this.trySend(mail);
   }
 
@@ -142,6 +141,8 @@ export class MailManager {
 
     let successes = 0;
     let failures = 0;
+
+    await container.tm.reloadTransports();
 
     for (let m of mails) {
       const result = await this.trySend(m);

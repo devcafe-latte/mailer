@@ -5,6 +5,7 @@ import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
 import { Serializer } from '../model/Serializer';
+import { MailTransportType } from '../model/Settings';
 
 describe('Basic Sending of messages', () => {
 
@@ -202,13 +203,8 @@ describe('Queueing and Processing', () => {
   });
 
   it('Processes until failure', async (done) => {
-    await container.db.query("DELETE FROM transport WHERE id > 1");
-    const m = await mm.queueMail(mailContent);
-    const hacky = (await container.tm.getTransport()).getMailer()
-    const mock: MockTransport = hacky.transporter as MockTransport;
-
-    mock.shouldError = true;
-
+    await th.setAsOnlyMailer(MailTransportType.MOCK_FAIL);
+    await mm.queueMail(mailContent);
 
     //Try to process 10 times.
     for (let i = 0; i < 10; i++) {

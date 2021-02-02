@@ -1,12 +1,12 @@
 import container from '../model/DiContainer';
-import { EmailContent } from '../model/mail/Email';
+import { Email, EmailContent } from '../model/mail/Email';
 import { MailManager } from '../model/mail/MailManager';
 import { MockTransport } from '../model/MockTransport';
 import { TestHelper } from './TestHelper';
 import { TransportManager } from '../model/TransportManager';
 import { MailTransportType } from '../model/Settings';
 
-describe('Basic Sending of messages', () => {
+describe('Basic Mock Sending of messages', () => {
 
   let th: TestHelper;
   let mm: MailManager;
@@ -47,15 +47,18 @@ describe('Basic Sending of messages', () => {
   });
 
   it('Gets send error with Mock transport', async () => {
-    await th.setAsOnlyMailer(MailTransportType.MOCK);
+    await th.setAsOnlyMailer(MailTransportType.MOCK_FAIL);
     const t = await tm.getTransport();
     const transporter: MockTransport = t.getMailer().transporter as MockTransport;
+    expect(transporter.shouldError).toBe(true);
 
-    transporter.shouldError = true;
-    
-    const result = await mm.sendMail(mailContent);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("Mock error");
+    const mail = Email.fromMailContent(mailContent, container.settings.defaults);
+    try {
+      await t.getMailer().sendMail(mail.toNodeMailerMail());
+      throw "Shouldn't get here";
+    } catch (err) {
+      expect(String(err)).toContain("Mock error");
+    }
   });
 
 });

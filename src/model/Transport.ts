@@ -27,6 +27,8 @@ export class Transport {
     switch (this.type) {
       case MailTransportType.MOCK:
         return true;
+      case MailTransportType.MOCK_FAIL:
+        return true;
       case MailTransportType.MAILGUN:
         return this.isValidMailgun()
       case MailTransportType.SENDINBLUE:
@@ -102,6 +104,8 @@ export class Transport {
         });
       } else if (this.type === MailTransportType.MOCK) {
         this._mailer = nodemailer.createTransport(new MockTransport());
+      } else if (this.type === MailTransportType.MOCK_FAIL) {
+        this._mailer = nodemailer.createTransport(new MockTransport(true));
       } else if (this.type === MailTransportType.SENDINBLUE) {
         if (!this.sib) throw MailerError.new("Missing settings for Send In Blue", 500);
         this._mailer = nodemailer.createTransport(sendinBlue(this.sib));
