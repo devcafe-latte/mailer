@@ -43,7 +43,7 @@ describe('Send using Sendinblue', () => {
   });
 
   it('Send SendInBlue Mail with template', async (done) => {
-    const cont = {...mailContent, template: "test-template-1", language: "en" };
+    const cont: EmailContent = { ...mailContent, template: "test-template-1", language: "en", params: { foo: 'a thing', bar: 'another thing', baz: 'baz of course' } };
     const result = await mm.sendMailFromTemplate(cont)
     expect(result).not.toBeNull();
     expect(result.success).toBe(true);
