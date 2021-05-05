@@ -3,11 +3,13 @@ import nodemailer from 'nodemailer';
 import mg from 'nodemailer-mailgun-transport';
 import sendinBlue from 'nodemailer-sendinblue-transport';
 import Mailer from 'nodemailer/lib/mailer';
+import { Email } from './mail/Email';
 
 import { MailerError } from './MailerError';
 import { MockTransport } from './MockTransport';
 import { Serializer } from './Serializer';
 import { MailTransportType } from './Settings';
+import { SendSmtpEmail, TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from 'sib-api-v3-typescript';
 
 export class Transport {
   id: number = null;
@@ -18,6 +20,7 @@ export class Transport {
   default: boolean = null;
   domain?: string = null;
 
+  private _sibClient?: TransactionalEmailsApi = null;
   private _mailer?: Mailer = null;
   sib?: SendInBlueSettings = null;
   mg?: MailgunSettings = null;
@@ -48,13 +51,13 @@ export class Transport {
 
     switch (this.type) {
       case MailTransportType.MAILGUN:
-        this.mg = {...this.mg, ...data.mg};
+        this.mg = { ...this.mg, ...data.mg };
         break;
       case MailTransportType.SENDINBLUE:
-        this.sib = {...this.sib, ...data.sib};
+        this.sib = { ...this.sib, ...data.sib };
         break;
       case MailTransportType.SMTP:
-        this.smtp = {...this.smtp, ...data.smtp};
+        this.smtp = { ...this.smtp, ...data.smtp };
         break;
       default:
         break;
@@ -71,7 +74,7 @@ export class Transport {
   }
 
   private isValidSendInBlue() {
-    if (!this.sib)return false;
+    if (!this.sib) return false;
     if (!this.sib.apiKey) return false;
     if (!this.sib.apiUrl) this.sib.apiUrl = SEND_IN_BLUE_DEFAULT_URL;
 
@@ -84,11 +87,55 @@ export class Transport {
     if (!this.smtp.user) return false;
     if (!this.smtp.pass) return false;
     if (!this.smtp.port) return false;
-    
+
     return true;
   }
 
-  getMailer(): Mailer {
+  //Todo, abstract Transports properly so we have different classes for each type.
+  send(mail: Email): Promise<any> {
+    const nodemailerTransports = [
+      MailTransportType.SMTP,
+      MailTransportType.MAILGUN,
+      MailTransportType.MOCK,
+      MailTransportType.MOCK_FAIL,
+    ];
+
+
+    if (this.type === MailTransportType.SENDINBLUE) return this.sendWithSendinblue(mail);
+
+    //Default to sending with Nodemailer
+    return this.sendWithNodemailer(mail);
+  }
+
+  private async sendWithSendinblue(mail: Email): Promise<any> {
+    if (!this._sibClient) {
+      //Note, If we ever want to use the url, we should change that here.
+      // Right now, it doesn't seem like there's any reason to change the url, so we don't set it.
+      this._sibClient = new TransactionalEmailsApi();
+      this._sibClient.setApiKey(TransactionalEmailsApiApiKeys.apiKey, this.sib.apiKey);
+    }
+
+    const sendSmtpEmail = new SendSmtpEmail();
+
+    sendSmtpEmail.subject = mail.subject;
+    sendSmtpEmail.textContent = mail.text;
+    sendSmtpEmail.htmlContent = mail.html;
+    
+    const from = Email.stringToAddres(mail.from);
+    sendSmtpEmail.sender = { name: from.name, email: from.address };
+
+    const to = Email.stringToAddres(mail.to);
+    sendSmtpEmail.to = [{ name: to.name, email: to.address }];
+
+    if (mail.replyTo) {
+      const replyTo = Email.stringToAddres(mail.replyTo);
+      sendSmtpEmail.replyTo = { name: replyTo.name, email: replyTo.address };
+    }
+
+    return await this._sibClient.sendTransacEmail(sendSmtpEmail);
+  }
+
+  getMailer() {
     if (!this._mailer) {
       if (this.type === MailTransportType.SMTP) {
         if (!this.smtp) throw MailerError.new("Missing settings for SMTP", 500);
@@ -106,9 +153,6 @@ export class Transport {
         this._mailer = nodemailer.createTransport(new MockTransport());
       } else if (this.type === MailTransportType.MOCK_FAIL) {
         this._mailer = nodemailer.createTransport(new MockTransport(true));
-      } else if (this.type === MailTransportType.SENDINBLUE) {
-        if (!this.sib) throw MailerError.new("Missing settings for Send In Blue", 500);
-        this._mailer = nodemailer.createTransport(sendinBlue(this.sib));
       } else if (this.type === MailTransportType.MAILGUN) {
         if (!this.mg) throw MailerError.new("Missing settings for Mailgun", 500);
         const options = {
@@ -127,12 +171,18 @@ export class Transport {
     return this._mailer;
   }
 
+  private sendWithNodemailer(mail: Email): Promise<any> {
+    const mailer = this.getMailer();
+    return mailer.sendMail(mail.toNodeMailerMail());
+  }
+
   static deserialize(data: any): Transport {
     return Serializer.deserialize(Transport, data);
   }
 }
 
-export const SEND_IN_BLUE_DEFAULT_URL = 'https://api.sendinblue.com/v2.0';
+/** @deprecated Not used currently */
+export const SEND_IN_BLUE_DEFAULT_URL = 'https://api.sendinblue.com/v3';
 
 export type settingsType = SendInBlueSettings | MailgunSettings | SmtpSettings;
 

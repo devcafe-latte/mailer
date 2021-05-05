@@ -146,6 +146,17 @@ export class Email implements EmailContent {
     return `${a.name} <${a.address}>`;
   }
 
+  static stringToAddres(input: string): Address {
+    //example input: Dude <dude@exmaple.com>
+    const parts = input.split('<');
+    if (parts.length === 1) return { address: input };
+
+    return {
+      name: parts[0].trim(),
+      address: parts[1].replace(/>/, ''),
+    }
+  }
+
   static deserialize(data: any): Email {
 
     const m: ObjectMapping = {

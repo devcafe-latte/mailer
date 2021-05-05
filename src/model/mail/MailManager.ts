@@ -161,7 +161,7 @@ export class MailManager {
       mail.transportId = t.id;
       mail.setFromDomain(t.domain);
 
-      const result = await t.getMailer().sendMail(mail.toNodeMailerMail());
+      const result = await t.send(mail);
       result.success = true;
 
       mail.sent = moment();

@@ -40,6 +40,7 @@
     "nodemailer-sendinblue-transport": "^1.2.3",
     "promise-mysql": "^4.1.0",
     "seedrandom": "^2.4.4",
+    "sib-api-v3-typescript": "^2.2.1",
     "typescript": "^3.5.3",
     "uuid": "^3.3.2"
   },

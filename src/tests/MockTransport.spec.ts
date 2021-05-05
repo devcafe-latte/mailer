@@ -35,10 +35,8 @@ describe('Basic Mock Sending of messages', () => {
   
   it('gets mock transport', async () => {
     const t = await container.tm.getTransport(1);
-    const mailer = t.getMailer();
 
-    const transporter: MockTransport = mailer.transporter as MockTransport;
-    expect(transporter.constructor.name).toBe("MockTransport");
+    expect(t.type).toBe(MailTransportType.MOCK);
   });
 
   it('Sends successful message with Mock', async () => {

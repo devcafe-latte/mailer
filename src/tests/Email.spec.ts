@@ -72,5 +72,19 @@ describe('Email Tests', () => {
     m.from = "coo@covle.com";
     expect(m.isValid()).toBe(true);
   });
-  
+
+  it("Test String to Address", () => {
+
+    const expectations = [
+      { input: "dude <dudemeister@example.com>", output: { name: 'dude', address: 'dudemeister@example.com' } },
+      { input: "dude von Trapp <dudemeister@example.com>", output: { name: 'dude von Trapp', address: 'dudemeister@example.com' } },
+      { input: "dudemeister@example.com", output: { address: 'dudemeister@example.com' } },
+    ];
+
+    for (let e of expectations) {
+      expect(Email.stringToAddres(e.input)).toEqual(e.output);
+    }
+
+
+  });
 });
