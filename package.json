@@ -1,6 +1,6 @@
 {
   "name": "covle-mailer",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Microservice for handling email sending",
   "main": "app.js",
   "scripts": {

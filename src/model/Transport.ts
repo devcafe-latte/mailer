@@ -120,7 +120,7 @@ export class Transport {
     sendSmtpEmail.subject = mail.subject;
     if (!mail.html && mail.text) {
       //Sendinblue  throws a shitfit is there's no html content, because why not...
-      mail.html = mail.text.replace("\n", "<br>\n");
+      mail.html = mail.text.replace(/\n/g, "<br>\n");
     }
     sendSmtpEmail.textContent = mail.text;
     sendSmtpEmail.htmlContent = mail.html;
