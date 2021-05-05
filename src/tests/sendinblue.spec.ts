@@ -11,7 +11,7 @@ describe('Send using Sendinblue', () => {
     to: "Coo van Leeuwen <c00yt825@gmail.com>",
     from: "Ya Boi Testy McTestFace <noreply@xn--berbrckungshilfe-studierende-06cf.de>",
     subject: "[Mailer] SendInBlue is working",
-    text: "Shall this pass too?",
+    text: "Shall this pass too?\nNew line because why not.",
     html: "<h5>Shall this pass too?</h5> <p>bluppy <strong>strong</strong></p>"
   };
 
@@ -25,6 +25,23 @@ describe('Send using Sendinblue', () => {
 
   afterEach(async (done) => {
     await th.shutdown();
+    done();
+  });
+
+  it('Send SendInBlue no html', async (done) => {
+    const mc = { ...mailContent };
+    mc.html = null;
+
+    const result = await mm.sendMail(mc)
+    expect(result).not.toBeNull();
+    expect(result.success).toBe(true);
+
+    const email = await container.db.getRow<Email>("SELECT * FROM `email` WHERE id = ?", [1], Email);
+    expect(email.error).toBeNull();
+    expect(email.retryAfter).toBeNull();
+    expect(email.sent).not.toBeNull();
+    expect(email.status).toBe(MailStatus.SENT);
+
     done();
   });
 

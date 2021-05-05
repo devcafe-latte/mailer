@@ -118,8 +118,13 @@ export class Transport {
     const sendSmtpEmail = new SendSmtpEmail();
 
     sendSmtpEmail.subject = mail.subject;
+    if (!mail.html && mail.text) {
+      //Sendinblue  throws a shitfit is there's no html content, because why not...
+      mail.html = mail.text.replace("\n", "<br>\n");
+    }
     sendSmtpEmail.textContent = mail.text;
     sendSmtpEmail.htmlContent = mail.html;
+
     
     const from = Email.stringToAddres(mail.from);
     sendSmtpEmail.sender = { name: from.name, email: from.address };
