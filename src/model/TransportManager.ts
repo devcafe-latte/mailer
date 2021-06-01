@@ -50,7 +50,7 @@ export class TransportManager {
     if (!id || !this._transports[id]) {
       if (this._weights.length === 0) {
         //Weights not in use, return default.
-        return this._defaultTransport
+        return this._defaultTransport;
       } else {
         //We select a 'random' one based on the weights.
         const n = Math.floor(Math.random() * this._weights.length);

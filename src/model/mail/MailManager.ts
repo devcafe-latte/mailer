@@ -177,6 +177,10 @@ export class MailManager {
 
       //Update attempt and set new retry time
       mail.attempt++;
+      
+      //Sometimes transportId is a weird number. I don't know how this is possible, but it is.
+      mail.transportId = null;
+
       if (mail.attempt >= mail.maxRetries) {
         mail.retryAfter = null;
         mail.status = MailStatus.FAILED;
