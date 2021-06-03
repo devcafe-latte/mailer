@@ -136,6 +136,7 @@ export class Email implements EmailContent {
     m.status = MailStatus.PENDING;
     m.maxRetries = 10;
     m.attempt = 0;
+    m.transportId = null;
 
     return m;
   }
